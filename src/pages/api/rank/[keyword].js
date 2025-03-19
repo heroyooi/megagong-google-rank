@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import puppeteer from 'puppeteer-core';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -18,17 +18,17 @@ export default async function handler(req, res) {
     const isVercel = !!process.env.VERCEL;
 
     browser = await puppeteer.launch({
-      headless: 'new',
+      headless: true,
+      executablePath: isVercel
+        ? '/usr/bin/chromium-browser' // Vercel 환경에서는 미리 설치된 Chromium 사용
+        : undefined, // 로컬에서는 기본 실행
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled',
+        '--disable-blink-features=AutomationControlled', // 크롤링 감지 방지
         '--single-process',
         '--disable-gpu',
       ],
-      executablePath: isVercel
-        ? '/usr/bin/chromium' // Vercel에서 실행될 때 Chrome 실행 파일 경로 설정
-        : undefined, // 로컬에서는 기본 실행
     });
 
     const page = await browser.newPage();
