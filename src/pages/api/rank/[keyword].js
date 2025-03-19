@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer-core';
+import puppeteer from 'puppeteer';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -14,18 +14,19 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // ✅ Vercel과 로컬 실행을 구분하여 Chrome 실행 방식 설정
+    // ✅ Vercel에서는 실행 경로를 명확히 지정
     const isVercel = !!process.env.VERCEL;
+    const executablePath = isVercel
+      ? process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium'
+      : undefined; // 로컬에서는 기본 실행
 
     browser = await puppeteer.launch({
       headless: true,
-      executablePath: isVercel
-        ? '/usr/bin/chromium-browser' // Vercel 환경에서는 미리 설치된 Chromium 사용
-        : undefined, // 로컬에서는 기본 실행
+      executablePath,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled', // 크롤링 감지 방지
+        '--disable-blink-features=AutomationControlled',
         '--single-process',
         '--disable-gpu',
       ],
@@ -33,7 +34,7 @@ export default async function handler(req, res) {
 
     const page = await browser.newPage();
 
-    // 🚀 User-Agent 변경 (Google 차단 방지)
+    // 🚀 Google 차단 방지
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
     );
