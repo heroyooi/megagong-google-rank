@@ -14,18 +14,21 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    const isVercel = !!process.env.VERCEL; // ✅ Vercel 환경인지 확인
+    // ✅ Vercel과 로컬 실행을 구분하여 Chrome 실행 방식 설정
+    const isVercel = !!process.env.VERCEL;
 
     browser = await puppeteer.launch({
-      headless: true,
-      executablePath: isVercel
-        ? process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath() // Vercel에서 실행 시 자동으로 Chrome 찾기
-        : undefined, // 로컬에서는 기본 실행
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled', // 크롤링 감지 방지
+        '--disable-blink-features=AutomationControlled',
+        '--single-process',
+        '--disable-gpu',
       ],
+      executablePath: isVercel
+        ? '/usr/bin/chromium' // Vercel에서 실행될 때 Chrome 실행 파일 경로 설정
+        : undefined, // 로컬에서는 기본 실행
     });
 
     const page = await browser.newPage();
@@ -66,7 +69,7 @@ export default async function handler(req, res) {
       searchResults = searchResults.concat(
         pageResults.map((result, index) => ({
           ...result,
-          rank: index + 1 + (currentPage - 1) * 10, // 🚀 페이지 별로 순위 누적
+          rank: index + 1 + (currentPage - 1) * 10,
         }))
       );
 
