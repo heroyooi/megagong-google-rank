@@ -14,14 +14,13 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // ✅ 로컬과 Vercel에서 실행 방식 구분
-    const isVercel = process.env.VERCEL === '1';
+    const isVercel = !!process.env.VERCEL; // ✅ Vercel 환경인지 확인
 
     browser = await puppeteer.launch({
       headless: true,
       executablePath: isVercel
-        ? process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser' // Vercel에서 실행될 때
-        : undefined, // 로컬에서는 기본 `puppeteer` 실행
+        ? process.env.PUPPETEER_EXECUTABLE_PATH || puppeteer.executablePath() // Vercel에서 실행 시 자동으로 Chrome 찾기
+        : undefined, // 로컬에서는 기본 실행
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
