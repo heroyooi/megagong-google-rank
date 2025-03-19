@@ -11,30 +11,19 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: '키워드를 입력해주세요.' });
   }
 
-  let browser = null;
-
   try {
-    // ✅ Vercel 환경 확인
-    const isVercel = !!process.env.VERCEL;
-
-    // ✅ 실행 가능한 Puppeteer 설정
-    browser = await puppeteer.launch({
-      headless: true,
+    const browser = await puppeteer.launch({
+      headless: 'new', // 최신 headless 모드 사용 (봇 감지 회피)
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--single-process',
-        '--disable-software-rasterizer',
-        '--disable-blink-features=AutomationControlled',
+        '--disable-blink-features=AutomationControlled', // 자동화 감지 방지
       ],
-      executablePath: isVercel ? puppeteer.executablePath() : undefined, // Vercel 환경에서 실행 가능한 Chromium 자동 찾기
     });
 
     const page = await browser.newPage();
 
-    // 🚀 User-Agent 변경 (Google 크롤링 차단 방지)
+    // User-Agent 설정 (Google이 봇으로 인식하지 않도록)
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
     );
@@ -43,37 +32,33 @@ export default async function handler(req, res) {
     let searchResults = [];
     let foundMegagongRank = null;
 
-    // ✅ 최대 5페이지까지 검색
+    // 최대 5페이지까지 검색
     while (currentPage <= 5) {
       const searchURL = `https://www.google.com/search?q=${encodeURIComponent(
         keyword
       )}&start=${(currentPage - 1) * 10}`;
 
-      console.log(`🔍 ${currentPage} 페이지 크롤링: ${searchURL}`);
-
       await page.goto(searchURL, { waitUntil: 'domcontentloaded' });
 
-      const pageResults = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.tF2C, .g')).map(
+      // 크롤링 방지 회피 (navigator.webDriver 속성 제거)
+      await page.evaluate(() => {
+        Object.defineProperty(navigator, 'webdriver', { get: () => false });
+      });
+
+      // 검색 결과 가져오기 (순위 누적 반영)
+      const pageResults = await page.evaluate((currentPage) => {
+        return Array.from(document.querySelectorAll('.MjjYud')).map(
           (el, index) => ({
             title: el.querySelector('h3')?.innerText || '제목 없음',
-            rank: index + 1,
+            rank: index + 1 + (currentPage - 1) * 10, // 페이지별 순위 누적
             url: el.querySelector('a')?.href || '',
           })
         );
-      });
+      }, currentPage);
 
-      if (pageResults.length === 0) {
-        console.log(`❌ ${currentPage} 페이지에서 검색 결과를 찾을 수 없음.`);
-      }
+      searchResults = searchResults.concat(pageResults);
 
-      searchResults = searchResults.concat(
-        pageResults.map((result, index) => ({
-          ...result,
-          rank: index + 1 + (currentPage - 1) * 10,
-        }))
-      );
-
+      // "megagong.net"이 포함된 검색 결과 찾기
       const megagongResult = searchResults.find((result) =>
         result.url.includes('megagong.net')
       );
@@ -88,14 +73,13 @@ export default async function handler(req, res) {
 
     await browser.close();
 
-    // ✅ 결과 반환
+    // 결과 반환
     res.status(200).json({
       keyword,
       activeRank: foundMegagongRank ? foundMegagongRank : 'N/A',
       results: searchResults,
     });
   } catch (error) {
-    if (browser) await browser.close();
     res.status(500).json({
       error: '검색 순위를 가져오는 중 오류 발생',
       details: error.message,
