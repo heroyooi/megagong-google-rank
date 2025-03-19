@@ -1,5 +1,4 @@
-import puppeteer from 'puppeteer-core';
-import chrome from 'chrome-aws-lambda';
+import puppeteer from 'puppeteer';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -15,21 +14,20 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // ✅ Vercel에서 실행할 경우 chrome-aws-lambda 사용
-    if (process.env.VERCEL) {
-      browser = await puppeteer.launch({
-        args: chrome.args,
-        executablePath: await chrome.executablePath,
-        headless: chrome.headless,
-      });
-    } else {
-      // ✅ 로컬에서는 puppeteer 사용
-      const puppeteerLocal = require('puppeteer');
-      browser = await puppeteerLocal.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      });
-    }
+    // ✅ Vercel과 로컬 실행을 구분하여 Chrome 실행 방식 설정
+    const isVercel = !!process.env.VERCEL;
+
+    browser = await puppeteer.launch({
+      headless: true,
+      args: [
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-blink-features=AutomationControlled',
+        '--single-process',
+        '--disable-gpu',
+      ],
+      executablePath: isVercel ? '/usr/bin/chromium' : undefined, // Vercel에서 실행 경로 설정
+    });
 
     const page = await browser.newPage();
 
