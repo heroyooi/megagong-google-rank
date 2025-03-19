@@ -1,4 +1,5 @@
 {
+  "version": 2,
   "functions": {
     "api/rank/[keyword].js": {
       "runtime": "nodejs18.x",
