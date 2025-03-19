@@ -19,7 +19,7 @@ export default async function handler(req, res) {
 
     // ✅ 실행 가능한 Puppeteer 설정
     browser = await puppeteer.launch({
-      headless: true,
+      headless: 'new',
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -29,7 +29,9 @@ export default async function handler(req, res) {
         '--disable-software-rasterizer',
         '--disable-blink-features=AutomationControlled',
       ],
-      executablePath: isVercel ? puppeteer.executablePath() : undefined, // Vercel 환경에서 실행 가능한 Chromium 자동 찾기
+      executablePath: isVercel
+        ? '/usr/bin/google-chrome-stable'
+        : puppeteer.executablePath(), // ✅ Vercel에서는 Google Chrome 실행, 로컬에서는 기본 실행
     });
 
     const page = await browser.newPage();

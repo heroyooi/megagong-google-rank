@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "postinstall": "PUPPETEER_SKIP_DOWNLOAD=true npm install",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
@@ -11,7 +12,7 @@
   "dependencies": {
     "google-trends-api": "^4.9.2",
     "next": "15.1.7",
-    "puppeteer": "^24.4.0",
+    "puppeteer": "^21.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
