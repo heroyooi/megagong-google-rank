@@ -1,0 +1,9 @@
+{
+  "functions": {
+    "api/rank/[keyword].js": {
+      "runtime": "nodejs18.x",
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+}
