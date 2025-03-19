@@ -14,24 +14,27 @@ export default async function handler(req, res) {
   let browser = null;
 
   try {
-    // ✅ Vercel과 로컬 실행을 구분하여 Chrome 실행 방식 설정
+    // ✅ Vercel 환경 확인
     const isVercel = !!process.env.VERCEL;
 
+    // ✅ 실행 가능한 Puppeteer 설정
     browser = await puppeteer.launch({
       headless: true,
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-blink-features=AutomationControlled',
-        '--single-process',
+        '--disable-dev-shm-usage',
         '--disable-gpu',
+        '--single-process',
+        '--disable-software-rasterizer',
+        '--disable-blink-features=AutomationControlled',
       ],
-      executablePath: isVercel ? '/usr/bin/chromium' : undefined, // Vercel에서 실행 경로 설정
+      executablePath: isVercel ? puppeteer.executablePath() : undefined, // Vercel 환경에서 실행 가능한 Chromium 자동 찾기
     });
 
     const page = await browser.newPage();
 
-    // 🚀 User-Agent 변경 (Google 차단 방지)
+    // 🚀 User-Agent 변경 (Google 크롤링 차단 방지)
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
     );
