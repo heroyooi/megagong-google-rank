@@ -16,7 +16,9 @@ export default async function handler(req, res) {
   try {
     // ✅ Puppeteer 실행 (Vercel에서도 실행 가능하게 설정)
     browser = await puppeteer.launch({
-      headless: true, // GUI 없는 브라우저 실행
+      headless: true,
+      executablePath:
+        process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser', // Vercel 환경 대응
       args: [
         '--no-sandbox',
         '--disable-setuid-sandbox',
@@ -45,7 +47,6 @@ export default async function handler(req, res) {
 
       await page.goto(searchURL, { waitUntil: 'domcontentloaded' });
 
-      // ✅ 검색 결과 파싱 (구글 DOM 구조 대응)
       const pageResults = await page.evaluate(() => {
         return Array.from(document.querySelectorAll('.tF2C, .g')).map(
           (el, index) => ({
@@ -60,7 +61,6 @@ export default async function handler(req, res) {
         console.log(`❌ ${currentPage} 페이지에서 검색 결과를 찾을 수 없음.`);
       }
 
-      // ✅ 전체 검색 결과 리스트에 추가
       searchResults = searchResults.concat(
         pageResults.map((result, index) => ({
           ...result,
@@ -68,7 +68,6 @@ export default async function handler(req, res) {
         }))
       );
 
-      // ✅ "megagong.net" 포함된 검색 결과 찾기
       const megagongResult = searchResults.find((result) =>
         result.url.includes('megagong.net')
       );
