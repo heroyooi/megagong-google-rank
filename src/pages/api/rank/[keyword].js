@@ -46,15 +46,16 @@ export default async function handler(req, res) {
         Object.defineProperty(navigator, 'webdriver', { get: () => false });
       });
 
-      const pageResults = await page.evaluate((currentPage) => {
-        return Array.from(document.querySelectorAll('.MjjYud')).map(
-          (el, index) => ({
-            title: el.querySelector('h3')?.innerText || '제목 없음',
-            rank: index + 1 + (currentPage - 1) * 10,
-            url: el.querySelector('a')?.href || '',
-          })
-        );
+      const pageResults = await page.evaluate(() => {
+        return Array.from(document.querySelectorAll('.MjjYud')).map(el => ({
+          title: el.querySelector('h3')?.innerText || '제목 없음',
+          url: el.querySelector('a')?.href || '',
+        }));
       }, currentPage);
+
+      pageResults.forEach((result, index) => {
+        result.rank = searchResults.length + 1 + index;
+      });
 
       searchResults = searchResults.concat(pageResults);
 
