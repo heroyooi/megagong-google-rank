@@ -47,18 +47,20 @@ export default async function handler(req, res) {
       });
 
       const pageResults = await page.evaluate(() => {
-        return Array.from(document.querySelectorAll('.MjjYud')).map(el => ({
-          title: el.querySelector('h3')?.innerText || '제목 없음',
-          url: el.querySelector('a')?.href || '',
-        }));
-      }, currentPage);
-
+        return Array.from(document.querySelectorAll('.MjjYud'))
+          .map(el => ({
+            title: el.querySelector('h3')?.innerText || '제목 없음',
+            url: el.querySelector('a')?.href || '',
+          }))
+          .filter(result => result.title !== '제목 없음' || result.url !== '');
+      });
+      
       pageResults.forEach((result, index) => {
         result.rank = searchResults.length + 1 + index;
       });
-
+      
       searchResults = searchResults.concat(pageResults);
-
+      
       const megagongResult = searchResults.find((result) =>
         result.url.includes('megagong.net')
       );
