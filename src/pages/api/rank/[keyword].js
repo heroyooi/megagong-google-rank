@@ -16,20 +16,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    browser = await puppeteer.launch({
+    const browser = await puppeteer.launch({
+      headless: 'new', // 최신 headless 모드 사용 (봇 감지 회피)
       args: [
-        '--no-sandbox',  // ✅ 필수 옵션
+        '--no-sandbox',
         '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-blink-features=AutomationControlled',
+        '--disable-blink-features=AutomationControlled', // 자동화 감지 방지
       ],
-      executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || await chromium.executablePath(),
-      headless: true, // headless 모드 유지
     });
-    
 
     const page = await browser.newPage();
 
+    // User-Agent 설정 (Google이 봇으로 인식하지 않도록)
     await page.setUserAgent(
       'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36'
     );
@@ -38,6 +36,7 @@ export default async function handler(req, res) {
     let searchResults = [];
     let foundMegagongRank = null;
 
+    // 최대 5페이지까지 검색
     while (currentPage <= 5) {
       const searchURL = `https://www.google.com/search?q=${encodeURIComponent(
         keyword
@@ -45,15 +44,17 @@ export default async function handler(req, res) {
 
       await page.goto(searchURL, { waitUntil: 'domcontentloaded' });
 
+      // 크롤링 방지 회피 (navigator.webDriver 속성 제거)
       await page.evaluate(() => {
         Object.defineProperty(navigator, 'webdriver', { get: () => false });
       });
 
+      // 검색 결과 가져오기 (순위 누적 반영)
       const pageResults = await page.evaluate((currentPage) => {
         return Array.from(document.querySelectorAll('.MjjYud')).map(
           (el, index) => ({
             title: el.querySelector('h3')?.innerText || '제목 없음',
-            rank: index + 1 + (currentPage - 1) * 10,
+            rank: index + 1 + (currentPage - 1) * 10, // 페이지별 순위 누적
             url: el.querySelector('a')?.href || '',
           })
         );
@@ -61,6 +62,7 @@ export default async function handler(req, res) {
 
       searchResults = searchResults.concat(pageResults);
 
+      // "megagong.net"이 포함된 검색 결과 찾기
       const megagongResult = searchResults.find((result) =>
         result.url.includes('megagong.net')
       );
@@ -75,6 +77,7 @@ export default async function handler(req, res) {
 
     await browser.close();
 
+    // 결과 반환
     res.status(200).json({
       keyword,
       activeRank: foundMegagongRank ? foundMegagongRank : 'N/A',
