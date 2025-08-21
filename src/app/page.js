@@ -279,38 +279,38 @@ export default function Home() {
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
     const gongColors = [
-      '#1e3a8a',
-      '#1d4ed8',
-      '#2563eb',
-      '#3b82f6',
-      '#60a5fa',
-      '#93c5fd',
-      '#bfdbfe',
-      '#0ea5e9',
-      '#38bdf8',
-      '#7dd3fc',
-      '#bae6fd',
-      '#4dabf7',
-      '#74c0fc',
-      '#a5d8ff',
+      '#0d47a1',
+      '#1565c0',
+      '#1976d2',
+      '#1e88e5',
+      '#42a5f5',
+      '#64b5f6',
+      '#90caf9',
+      '#00acc1',
+      '#26c6da',
+      '#4dd0e1',
+      '#80deea',
+      '#5e35b1',
+      '#7e57c2',
+      '#9575cd',
     ];
     const sobangColors = [
-      '#b91c1c',
-      '#dc2626',
-      '#ef4444',
-      '#f87171',
-      '#fca5a5',
-      '#fecaca',
-      '#991b1b',
-      '#c53030',
-      '#f05252',
-      '#ff6b6b',
-      '#fa5252',
-      '#e03131',
-      '#c92a2a',
-      '#ff8787',
-      '#ffa8a8',
-      '#ff4d6d',
+      '#b71c1c',
+      '#c62828',
+      '#d32f2f',
+      '#e53935',
+      '#f4511e',
+      '#fb8c00',
+      '#ff9800',
+      '#ffb74d',
+      '#ffd54f',
+      '#ff8a65',
+      '#ff7043',
+      '#ff5252',
+      '#ff1744',
+      '#d81b60',
+      '#ad1457',
+      '#c2185b',
     ];
 
     const buildOptions = (keywords, group) => {
@@ -331,18 +331,8 @@ export default function Home() {
         data: s.data.map((v) => (v == null ? finalMax : v)),
       }));
       const selected = {};
-      const defaults =
-        group === 'gong'
-          ? ['공무원', '공무원시험', '공무원인강추천', '공무원종류', '9급공무원']
-          : [
-              '소방',
-              '소방공무원',
-              '소방경채',
-              '소방공무원경채',
-              '소방가산점',
-            ];
       keywords.forEach((kw) => {
-        selected[kw] = defaults.includes(kw);
+        selected[kw] = true;
       });
       const color = group === 'gong' ? gongColors : sobangColors;
       return {
