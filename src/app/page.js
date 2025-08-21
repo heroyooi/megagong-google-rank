@@ -121,7 +121,7 @@ function rankText(value) {
     typeof value === 'object' && value.top10Count > 1 ? value.top10Count : 0;
   return {
     primary: `${rank}위`,
-    detail: count ? `최고 순위 ${rank}위 / 10위내 포함 ${count}건` : '',
+    detail: count ? `10위 내 포함 ${count}건` : '',
   };
 }
 
