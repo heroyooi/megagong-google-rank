@@ -312,9 +312,14 @@ export default function Home() {
     try {
       setSaving(true);
       setMsg(null);
+      const combine = (keywords, ranks, sources) =>
+        Object.fromEntries(
+          keywords.map((kw) => [kw, { rank: ranks[kw], source: sources[kw] }])
+        );
+
       const rankings = {
-        gong: gongState,
-        sobang: sobangState,
+        gong: combine(gongKeywords, gongState, gongSource),
+        sobang: combine(sobangKeywords, sobangState, sobangSource),
       };
       await logSeoData({ date, note: note.trim(), rankings });
       setNote('');
@@ -351,9 +356,14 @@ export default function Home() {
                     ? '집계전'
                     : rankText(gongState[kw])}
                   {gongSource[kw] && gongState[kw] !== 'loading' && (
-                    <small className={styles.keywordSource}>
-                      {gongSource[kw]}
-                    </small>
+                    <a
+                      className={styles.keywordSource}
+                      href={gongSource[kw]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {gongSource[kw].replace(/^https?:\/\//, '')}
+                    </a>
                   )}
                 </span>
               </li>
@@ -379,9 +389,14 @@ export default function Home() {
                     ? '집계전'
                     : rankText(sobangState[kw])}
                   {sobangSource[kw] && sobangState[kw] !== 'loading' && (
-                    <small className={styles.keywordSource}>
-                      {sobangSource[kw]}
-                    </small>
+                    <a
+                      className={styles.keywordSource}
+                      href={sobangSource[kw]}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      {sobangSource[kw].replace(/^https?:\/\//, '')}
+                    </a>
                   )}
                 </span>
               </li>
@@ -466,18 +481,21 @@ export default function Home() {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(gong).map(([kw, r]) => (
-                            <tr key={kw}>
-                              <td>{kw}</td>
-                              <td>
-                                {r === 'loading'
-                                  ? '로딩'
-                                  : r === null
-                                  ? '집계전'
-                                  : r}
-                              </td>
-                            </tr>
-                          ))}
+                          {Object.entries(gong).map(([kw, r]) => {
+                            const value = typeof r === 'object' ? r.rank : r;
+                            return (
+                              <tr key={kw}>
+                                <td>{kw}</td>
+                                <td>
+                                  {value === 'loading'
+                                    ? '로딩'
+                                    : value === null
+                                    ? '집계전'
+                                    : value}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
@@ -493,18 +511,21 @@ export default function Home() {
                           </tr>
                         </thead>
                         <tbody>
-                          {Object.entries(sobang).map(([kw, r]) => (
-                            <tr key={kw}>
-                              <td>{kw}</td>
-                              <td>
-                                {r === 'loading'
-                                  ? '로딩'
-                                  : r === null
-                                  ? '집계전'
-                                  : r}
-                              </td>
-                            </tr>
-                          ))}
+                          {Object.entries(sobang).map(([kw, r]) => {
+                            const value = typeof r === 'object' ? r.rank : r;
+                            return (
+                              <tr key={kw}>
+                                <td>{kw}</td>
+                                <td>
+                                  {value === 'loading'
+                                    ? '로딩'
+                                    : value === null
+                                    ? '집계전'
+                                    : value}
+                                </td>
+                              </tr>
+                            );
+                          })}
                         </tbody>
                       </table>
                     </div>
