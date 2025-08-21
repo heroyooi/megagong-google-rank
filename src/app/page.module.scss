@@ -309,6 +309,16 @@
         }
       }
 
+      .chartGroup {
+        margin-top: 16px;
+      }
+
+      .chartTitle {
+        margin: 6px 0 8px;
+        font-weight: 700;
+        color: var(--text-sub);
+      }
+
       .chart {
         width: 100%;
         height: 300px;
@@ -329,6 +339,35 @@
           display: flex;
           justify-content: space-between;
           align-items: center;
+
+          .headerButtons {
+            display: flex;
+            gap: 8px;
+          }
+
+          .toggleButton {
+            appearance: none;
+            border: none;
+            @include m.soft-border;
+            background: var(--panel);
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
+            width: 28px;
+            text-align: center;
+            transition: opacity 0.2s ease;
+
+            &:hover {
+              opacity: 0.8;
+            }
+
+            &:focus-visible {
+              @include m.focus-ring;
+            }
+          }
 
           .deleteButton {
             appearance: none;

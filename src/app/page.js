@@ -271,51 +271,97 @@ export default function Home() {
   const allSeoData = useSeoDataRealtime();
   const seoEntries = Object.entries(allSeoData);
   const [chartLimit, setChartLimit] = useState(7);
+  const [openCards, setOpenCards] = useState({});
 
-  const chartOptions = useMemo(() => {
-    if (seoEntries.length === 0) return null;
+  useEffect(() => {
+    if (seoEntries.length === 0) return;
+    const latest = [...seoEntries]
+      .sort((a, b) => b[0].localeCompare(a[0]))[0][0];
+    setOpenCards({ [latest]: true });
+  }, [seoEntries]);
+
+  const { gongChartOptions, sobangChartOptions } = useMemo(() => {
+    if (seoEntries.length === 0) return { gongChartOptions: null, sobangChartOptions: null };
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
-    const keywords = [...gongKeywords, ...sobangKeywords];
-    let maxRank = 1;
-    const rawSeries = keywords.map((kw) => {
-      const data = limited.map(([, details]) => {
-        const group = gongKeywords.includes(kw) ? 'gong' : 'sobang';
-        const r = details?.rankings?.[group]?.[kw];
-        const val = getRankValue(r);
-        const num = typeof val === 'number' ? val : null;
-        if (num !== null) maxRank = Math.max(maxRank, num);
-        return num;
-      });
-      return { name: kw, type: 'line', data };
-    });
-    const finalMax = maxRank + 1;
-    const series = rawSeries.map((s) => ({
-      ...s,
-      data: s.data.map((v) => (v == null ? finalMax : v)),
-    }));
-    const selected = {};
-    const defaults = [
-      '공무원',
-      '공무원시험',
-      '공무원인강추천',
-      '소방',
-      '소방공무원',
-      '소방경채',
+    const gongColors = [
+      '#0d47a1',
+      '#1565c0',
+      '#1976d2',
+      '#1e88e5',
+      '#42a5f5',
+      '#64b5f6',
+      '#90caf9',
+      '#00acc1',
+      '#26c6da',
+      '#4dd0e1',
+      '#80deea',
+      '#5e35b1',
+      '#7e57c2',
+      '#9575cd',
     ];
-    keywords.forEach((kw) => {
-      selected[kw] = defaults.includes(kw);
-    });
+    const sobangColors = [
+      '#b71c1c',
+      '#c62828',
+      '#d32f2f',
+      '#e53935',
+      '#f4511e',
+      '#fb8c00',
+      '#ff9800',
+      '#ffb74d',
+      '#ffd54f',
+      '#ff8a65',
+      '#ff7043',
+      '#ff5252',
+      '#ff1744',
+      '#d81b60',
+      '#ad1457',
+      '#c2185b',
+    ];
+
+    const buildOptions = (keywords, group) => {
+      let maxRank = 1;
+      const rawSeries = keywords.map((kw) => {
+        const data = limited.map(([, details]) => {
+          const r = details?.rankings?.[group]?.[kw];
+          const val = getRankValue(r);
+          const num = typeof val === 'number' ? val : null;
+          if (num !== null) maxRank = Math.max(maxRank, num);
+          return num;
+        });
+        return { name: kw, type: 'line', data };
+      });
+      const finalMax = maxRank + 1;
+      const series = rawSeries.map((s) => ({
+        ...s,
+        data: s.data.map((v) => (v == null ? finalMax : v)),
+      }));
+      const selected = {};
+      keywords.forEach((kw, idx) => {
+        selected[kw] = idx < 5;
+      });
+      const color = group === 'gong' ? gongColors : sobangColors;
+      return {
+        tooltip: { trigger: 'axis' },
+        legend: { type: 'scroll', selected },
+        grid: { left: 40, right: 20, top: 40, bottom: 40 },
+        xAxis: { type: 'category', data: dates },
+        yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
+        series,
+        color,
+      };
+    };
+
     return {
-      tooltip: { trigger: 'axis' },
-      legend: { type: 'scroll', selected },
-      grid: { left: 40, right: 20, top: 40, bottom: 40 },
-      xAxis: { type: 'category', data: dates },
-      yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
-      series,
+      gongChartOptions: buildOptions(gongKeywords, 'gong'),
+      sobangChartOptions: buildOptions(sobangKeywords, 'sobang'),
     };
   }, [seoEntries, chartLimit]);
+
+  const toggleCard = (d) => {
+    setOpenCards((prev) => ({ ...prev, [d]: !prev[d] }));
+  };
 
   const handleDelete = async (targetDate) => {
     if (!window.confirm(`${targetDate} 데이터를 삭제하시겠습니까?`)) return;
@@ -551,7 +597,7 @@ export default function Home() {
           <p>저장된 데이터가 없습니다.</p>
         ) : (
           <>
-            {chartOptions && (
+            {gongChartOptions && sobangChartOptions && (
               <div className={styles.chartSection}>
                 <div className={styles.chartControls}>
                   <label>
@@ -569,7 +615,20 @@ export default function Home() {
                     건
                   </label>
                 </div>
-                <ReactECharts className={styles.chart} option={chartOptions} />
+                <div className={styles.chartGroup}>
+                  <h4 className={styles.chartTitle}>공무원</h4>
+                  <ReactECharts
+                    className={styles.chart}
+                    option={gongChartOptions}
+                  />
+                </div>
+                <div className={styles.chartGroup}>
+                  <h4 className={styles.chartTitle}>소방</h4>
+                  <ReactECharts
+                    className={styles.chart}
+                    option={sobangChartOptions}
+                  />
+                </div>
               </div>
             )}
             <div className={styles.savedGrid}>
@@ -579,22 +638,33 @@ export default function Home() {
                 const prevGong = prevDetails?.rankings?.gong ?? {};
                 const sobang = details?.rankings?.sobang ?? {};
                 const prevSobang = prevDetails?.rankings?.sobang ?? {};
+                const isOpen = !!openCards[d];
                 return (
                   <div key={d} className={styles.savedCard}>
                     <div className={styles.savedHeader}>
                       <p className={styles.savedDate}>{d}</p>
-                      <button
-                        className={styles.deleteButton}
-                        onClick={() => handleDelete(d)}
-                      >
-                        삭제
-                      </button>
+                      <div className={styles.headerButtons}>
+                        <button
+                          className={styles.deleteButton}
+                          onClick={() => handleDelete(d)}
+                        >
+                          삭제
+                        </button>
+                        <button
+                          className={styles.toggleButton}
+                          onClick={() => toggleCard(d)}
+                        >
+                          {isOpen ? '-' : '+'}
+                        </button>
+                      </div>
                     </div>
-                    <div className={styles.tablesGrid}>
-                      {/* 공무원 테이블 */}
-                      <div>
-                        <h4 className={styles.tableTitle}>공무원</h4>
-                        <table className={styles.dataTable}>
+                    {isOpen && (
+                      <>
+                        <div className={styles.tablesGrid}>
+                          {/* 공무원 테이블 */}
+                          <div>
+                            <h4 className={styles.tableTitle}>공무원</h4>
+                            <table className={styles.dataTable}>
                           <colgroup>
                             <col width='45%' />
                             <col width='*' />
@@ -642,64 +712,66 @@ export default function Home() {
                         </table>
                       </div>
 
-                      {/* 소방 테이블 */}
-                      <div>
-                        <h4 className={styles.tableTitle}>소방</h4>
-                        <table className={styles.dataTable}>
-                          <colgroup>
-                            <col width='45%' />
-                            <col width='*' />
-                          </colgroup>
-                          <thead>
-                            <tr>
-                              <th>핵심키워드</th>
-                              <th>순위</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(sobang).map(([kw, r]) => {
-                              const value = getRankValue(r);
-                              const src =
-                                typeof r === 'object' && r.source
-                                  ? r.source
-                                  : '';
-                              const prevValue = prevSobang[kw];
-                              return (
-                                <tr key={kw}>
-                                  <td>{kw}</td>
-                                  <td>
-                                    {prevDetails &&
-                                      renderChange(value, prevValue)}
-                                    {value === 'loading'
-                                      ? '로딩'
-                                      : value === null
-                                      ? '집계전'
-                                      : rankText(value)}
-                                    {src && (
-                                      <a
-                                        className={styles.tableSource}
-                                        href={src}
-                                        target='_blank'
-                                        rel='noopener noreferrer'
-                                      >
-                                        {src.replace(/^https?:\/\//, '')}
-                                      </a>
-                                    )}
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
+                        {/* 소방 테이블 */}
+                        <div>
+                          <h4 className={styles.tableTitle}>소방</h4>
+                          <table className={styles.dataTable}>
+                            <colgroup>
+                              <col width='45%' />
+                              <col width='*' />
+                            </colgroup>
+                            <thead>
+                              <tr>
+                                <th>핵심키워드</th>
+                                <th>순위</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {Object.entries(sobang).map(([kw, r]) => {
+                                const value = getRankValue(r);
+                                const src =
+                                  typeof r === 'object' && r.source
+                                    ? r.source
+                                    : '';
+                                const prevValue = prevSobang[kw];
+                                return (
+                                  <tr key={kw}>
+                                    <td>{kw}</td>
+                                    <td>
+                                      {prevDetails &&
+                                        renderChange(value, prevValue)}
+                                      {value === 'loading'
+                                        ? '로딩'
+                                        : value === null
+                                        ? '집계전'
+                                        : rankText(value)}
+                                      {src && (
+                                        <a
+                                          className={styles.tableSource}
+                                          href={src}
+                                          target='_blank'
+                                          rel='noopener noreferrer'
+                                        >
+                                          {src.replace(/^https?:\/\//, '')}
+                                        </a>
+                                      )}
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
-                    </div>
 
-                    <div>
-                      <strong>비고</strong>
-                      <div className={styles.note}>
-                        {renderNote(details?.note)}
+                      <div>
+                        <strong>비고</strong>
+                        <div className={styles.note}>
+                          {renderNote(details?.note)}
+                        </div>
                       </div>
-                    </div>
+                      </>
+                    )}
                   </div>
                 );
               })}
