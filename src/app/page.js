@@ -278,6 +278,40 @@ export default function Home() {
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
+    const gongColors = [
+      '#1e3a8a',
+      '#1d4ed8',
+      '#2563eb',
+      '#3b82f6',
+      '#60a5fa',
+      '#93c5fd',
+      '#bfdbfe',
+      '#0ea5e9',
+      '#38bdf8',
+      '#7dd3fc',
+      '#bae6fd',
+      '#4dabf7',
+      '#74c0fc',
+      '#a5d8ff',
+    ];
+    const sobangColors = [
+      '#b91c1c',
+      '#dc2626',
+      '#ef4444',
+      '#f87171',
+      '#fca5a5',
+      '#fecaca',
+      '#991b1b',
+      '#c53030',
+      '#f05252',
+      '#ff6b6b',
+      '#fa5252',
+      '#e03131',
+      '#c92a2a',
+      '#ff8787',
+      '#ffa8a8',
+      '#ff4d6d',
+    ];
 
     const buildOptions = (keywords, group) => {
       let maxRank = 1;
@@ -299,11 +333,18 @@ export default function Home() {
       const selected = {};
       const defaults =
         group === 'gong'
-          ? ['공무원', '공무원시험', '공무원인강추천']
-          : ['소방', '소방공무원', '소방경채'];
+          ? ['공무원', '공무원시험', '공무원인강추천', '공무원종류', '9급공무원']
+          : [
+              '소방',
+              '소방공무원',
+              '소방경채',
+              '소방공무원경채',
+              '소방가산점',
+            ];
       keywords.forEach((kw) => {
         selected[kw] = defaults.includes(kw);
       });
+      const color = group === 'gong' ? gongColors : sobangColors;
       return {
         tooltip: { trigger: 'axis' },
         legend: { type: 'scroll', selected },
@@ -311,6 +352,7 @@ export default function Home() {
         xAxis: { type: 'category', data: dates },
         yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
         series,
+        color,
       };
     };
 
@@ -606,16 +648,16 @@ export default function Home() {
                       <p className={styles.savedDate}>{d}</p>
                       <div className={styles.headerButtons}>
                         <button
-                          className={styles.toggleButton}
-                          onClick={() => toggleCard(d)}
-                        >
-                          {isOpen ? '[-]' : '[+]'}
-                        </button>
-                        <button
                           className={styles.deleteButton}
                           onClick={() => handleDelete(d)}
                         >
                           삭제
+                        </button>
+                        <button
+                          className={styles.toggleButton}
+                          onClick={() => toggleCard(d)}
+                        >
+                          {isOpen ? '-' : '+'}
                         </button>
                       </div>
                     </div>

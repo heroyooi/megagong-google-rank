@@ -348,12 +348,16 @@
           .toggleButton {
             appearance: none;
             border: none;
-            background: transparent;
+            @include m.soft-border;
+            background: var(--panel);
             color: var(--text-sub);
             cursor: pointer;
             padding: 4px 8px;
             border-radius: var(--radius-sm);
             font-size: 13px;
+            font-weight: 700;
+            width: 28px;
+            text-align: center;
             transition: opacity 0.2s ease;
 
             &:hover {
