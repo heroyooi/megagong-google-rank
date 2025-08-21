@@ -483,6 +483,8 @@ export default function Home() {
                         <tbody>
                           {Object.entries(gong).map(([kw, r]) => {
                             const value = typeof r === 'object' ? r.rank : r;
+                            const src =
+                              typeof r === 'object' && r.source ? r.source : '';
                             return (
                               <tr key={kw}>
                                 <td>{kw}</td>
@@ -492,6 +494,16 @@ export default function Home() {
                                     : value === null
                                     ? '집계전'
                                     : value}
+                                  {src && (
+                                    <a
+                                      className={styles.tableSource}
+                                      href={src}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      ({src.replace(/^https?:\/\//, '')})
+                                    </a>
+                                  )}
                                 </td>
                               </tr>
                             );
@@ -513,6 +525,8 @@ export default function Home() {
                         <tbody>
                           {Object.entries(sobang).map(([kw, r]) => {
                             const value = typeof r === 'object' ? r.rank : r;
+                            const src =
+                              typeof r === 'object' && r.source ? r.source : '';
                             return (
                               <tr key={kw}>
                                 <td>{kw}</td>
@@ -522,6 +536,16 @@ export default function Home() {
                                     : value === null
                                     ? '집계전'
                                     : value}
+                                  {src && (
+                                    <a
+                                      className={styles.tableSource}
+                                      href={src}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      ({src.replace(/^https?:\/\//, '')})
+                                    </a>
+                                  )}
                                 </td>
                               </tr>
                             );

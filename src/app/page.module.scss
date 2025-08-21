@@ -384,6 +384,14 @@
             tbody tr:last-child td {
               border-bottom: none;
             }
+
+            .tableSource {
+              display: block;
+              margin-top: 2px;
+              font-size: 11px;
+              color: var(--text-sub);
+              text-decoration: none;
+            }
           }
         }
       }
