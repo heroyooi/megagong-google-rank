@@ -497,7 +497,7 @@ export default function Home() {
                         style={{
                           width: '100%',
                           borderCollapse: 'collapse',
-                          border: '1px solid #eee',
+                          border: '1px solid #333',
                         }}
                       >
                         <thead>
@@ -506,7 +506,7 @@ export default function Home() {
                               style={{
                                 textAlign: 'left',
                                 padding: 8,
-                                borderBottom: '1px solid #eee',
+                                borderBottom: '1px solid #333',
                               }}
                             >
                               핵심키워드
@@ -515,7 +515,7 @@ export default function Home() {
                               style={{
                                 textAlign: 'right',
                                 padding: 8,
-                                borderBottom: '1px solid #eee',
+                                borderBottom: '1px solid #333',
                               }}
                             >
                               순위
@@ -528,7 +528,7 @@ export default function Home() {
                               <td
                                 style={{
                                   padding: 8,
-                                  borderBottom: '1px solid #f7f7f7',
+                                  borderBottom: '1px solid #444',
                                 }}
                               >
                                 {kw}
@@ -537,7 +537,7 @@ export default function Home() {
                                 style={{
                                   padding: 8,
                                   textAlign: 'right',
-                                  borderBottom: '1px solid #f7f7f7',
+                                  borderBottom: '1px solid #444',
                                 }}
                               >
                                 {r === 'loading'
@@ -559,7 +559,7 @@ export default function Home() {
                         style={{
                           width: '100%',
                           borderCollapse: 'collapse',
-                          border: '1px solid #eee',
+                          border: '1px solid #333',
                         }}
                       >
                         <thead>
@@ -568,7 +568,7 @@ export default function Home() {
                               style={{
                                 textAlign: 'left',
                                 padding: 8,
-                                borderBottom: '1px solid #eee',
+                                borderBottom: '1px solid #333',
                               }}
                             >
                               핵심키워드
@@ -577,7 +577,7 @@ export default function Home() {
                               style={{
                                 textAlign: 'right',
                                 padding: 8,
-                                borderBottom: '1px solid #eee',
+                                borderBottom: '1px solid #333',
                               }}
                             >
                               순위
@@ -590,7 +590,7 @@ export default function Home() {
                               <td
                                 style={{
                                   padding: 8,
-                                  borderBottom: '1px solid #f7f7f7',
+                                  borderBottom: '1px solid #444',
                                 }}
                               >
                                 {kw}
@@ -599,7 +599,7 @@ export default function Home() {
                                 style={{
                                   padding: 8,
                                   textAlign: 'right',
-                                  borderBottom: '1px solid #f7f7f7',
+                                  borderBottom: '1px solid #444',
                                 }}
                               >
                                 {r === 'loading'
