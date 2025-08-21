@@ -242,7 +242,11 @@ function renderChange(curr, prev) {
   if (diff === 0) return null;
   const symbol = diff > 0 ? '▲' : '▼';
   const cls = diff > 0 ? styles.rankChangeUp : styles.rankChangeDown;
-  return <span className={cls}>{`${symbol}${Math.abs(diff)}`}</span>;
+  return (
+    <span className={`${styles.rankChange} ${cls}`}>
+      ({`${symbol}${Math.abs(diff)}`})
+    </span>
+  );
 }
 
 // ====== UI ======
@@ -495,7 +499,7 @@ export default function Home() {
         ) : (
           <div className={styles.savedGrid}>
             {seoEntries.map(([d, details], idx) => {
-              const prevDetails = idx === 0 ? seoEntries[1]?.[1] : null;
+              const prevDetails = seoEntries[idx + 1]?.[1] || null;
               const gong = details?.rankings?.gong ?? {};
               const prevGong = prevDetails?.rankings?.gong ?? {};
               const sobang = details?.rankings?.sobang ?? {};
@@ -536,12 +540,12 @@ export default function Home() {
                               <tr key={kw}>
                                 <td>{kw}</td>
                                 <td>
+                                  {prevDetails && renderChange(value, prevValue)}
                                   {value === 'loading'
                                     ? '로딩'
                                     : value === null
                                     ? '집계전'
-                                    : value}
-                                  {prevDetails && renderChange(value, prevValue)}
+                                    : rankText(value)}
                                   {src && (
                                     <a
                                       className={styles.tableSource}
@@ -584,12 +588,12 @@ export default function Home() {
                               <tr key={kw}>
                                 <td>{kw}</td>
                                 <td>
+                                  {prevDetails && renderChange(value, prevValue)}
                                   {value === 'loading'
                                     ? '로딩'
                                     : value === null
                                     ? '집계전'
-                                    : value}
-                                  {prevDetails && renderChange(value, prevValue)}
+                                    : rankText(value)}
                                   {src && (
                                     <a
                                       className={styles.tableSource}
