@@ -1,6 +1,13 @@
 import './globals.scss';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { Noto_Sans_KR } from 'next/font/google';
+
+const notoSansKr = Noto_Sans_KR({
+  subsets: ['latin'],
+  weight: ['400', '700'],
+  display: 'swap',
+});
 
 export const metadata = {
   title: 'Nextstudy SEO Master',
@@ -13,7 +20,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang='ko'>
-      <body>
+      <body className={notoSansKr.className}>
         <Header />
         {children}
         <Footer />
