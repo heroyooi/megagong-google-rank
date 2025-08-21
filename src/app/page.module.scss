@@ -144,8 +144,9 @@
             .keywordDetail {
               margin-top: 2px;
               font-size: 12px;
-              font-weight: 400;
-              color: var(--text-sub);
+              color: var(--primary);
+              font-weight: 700;
+              white-space: nowrap;
             }
 
             .keywordSource {
