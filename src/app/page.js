@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import styles from './page.module.css';
 
 // ===== Firebase (client) =====
 import { initializeApp, getApps } from 'firebase/app';
@@ -288,51 +289,26 @@ export default function Home() {
   };
 
   return (
-    <div style={{ padding: 24, maxWidth: 1100, margin: '0 auto' }}>
-      <h1 style={{ marginBottom: 8 }}>구글 검색 순위 비교(SEO)</h1>
-      <p style={{ color: '#666', marginTop: 0 }}>금요일만 저장 가능합니다.</p>
+    <div className={styles.container}>
+      <h1 className={styles.title}>구글 검색 순위 비교(SEO)</h1>
+      <p className={styles.notice}>금요일만 저장 가능합니다.</p>
 
       {/* 크롤링 영역 */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
-          gap: 16,
-          marginTop: 16,
-          marginBottom: 16,
-        }}
-      >
+      <div className={styles.keywordGrid}>
         {/* 공무원 */}
-        <div
-          style={{ border: '1px solid #e5e5e5', borderRadius: 8, padding: 16 }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <h3 style={{ margin: 0 }}>
+        <div className={styles.keywordBox}>
+          <div className={styles.keywordHeader}>
+            <h3>
               공무원 핵심 키워드({gongKeywords.length})
             </h3>
             <button onClick={handleFetchGong}>순위 가져오기</button>
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, marginTop: 12 }}>
+          <ul className={styles.keywordList}>
             {gongKeywords.map((kw, idx) => (
-              <li
-                key={kw}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '24px 1fr 100px',
-                  gap: 8,
-                  padding: '6px 0',
-                  borderBottom: '1px solid #f5f5f5',
-                }}
-              >
+              <li key={kw} className={styles.keywordItem}>
                 <span>{idx + 1}</span>
                 <span>{kw}</span>
-                <span style={{ textAlign: 'right' }}>
+                <span className={styles.keywordRank}>
                   {gongState[kw] === 'loading'
                     ? '데이터 로드 중...'
                     : gongState[kw] === null
@@ -345,36 +321,19 @@ export default function Home() {
         </div>
 
         {/* 소방 */}
-        <div
-          style={{ border: '1px solid #e5e5e5', borderRadius: 8, padding: 16 }}
-        >
-          <div
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-            }}
-          >
-            <h3 style={{ margin: 0 }}>
+        <div className={styles.keywordBox}>
+          <div className={styles.keywordHeader}>
+            <h3>
               소방 핵심 키워드({sobangKeywords.length})
             </h3>
             <button onClick={handleFetchSobang}>순위 가져오기</button>
           </div>
-          <ul style={{ listStyle: 'none', padding: 0, marginTop: 12 }}>
+          <ul className={styles.keywordList}>
             {sobangKeywords.map((kw, idx) => (
-              <li
-                key={kw}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns: '24px 1fr 100px',
-                  gap: 8,
-                  padding: '6px 0',
-                  borderBottom: '1px solid #f5f5f5',
-                }}
-              >
+              <li key={kw} className={styles.keywordItem}>
                 <span>{idx + 1}</span>
                 <span>{kw}</span>
-                <span style={{ textAlign: 'right' }}>
+                <span className={styles.keywordRank}>
                   {sobangState[kw] === 'loading'
                     ? '데이터 로드 중...'
                     : sobangState[kw] === null
@@ -388,46 +347,20 @@ export default function Home() {
       </div>
 
       {/* 입력/저장 영역 */}
-      <div
-        style={{
-          border: '1px solid #e5e5e5',
-          borderRadius: 8,
-          padding: 16,
-          display: 'grid',
-          gridTemplateColumns: '1fr',
-          gap: 12,
-        }}
-      >
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '100px 1fr',
-            alignItems: 'center',
-          }}
-        >
+      <div className={styles.form}>
+        <div className={styles.formRow}>
           <label htmlFor='seo_date'>날짜(금요일)</label>
           <input
             id='seo_date'
             type='date'
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            style={{
-              padding: 8,
-              border: '1px solid #ddd',
-              borderRadius: 6,
-              maxWidth: 220,
-            }}
+            className={styles.input}
           />
         </div>
 
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: '100px 1fr',
-            alignItems: 'start',
-          }}
-        >
-          <label htmlFor='seo_note' style={{ marginTop: 6 }}>
+        <div className={`${styles.formRow} ${styles.formRowAlignStart}`}>
+          <label htmlFor='seo_note' className={styles.noteLabel}>
             비고
           </label>
           <textarea
@@ -436,110 +369,55 @@ export default function Home() {
             onChange={(e) => setNote(e.target.value)}
             rows={4}
             placeholder='비고를 입력하세요'
-            style={{ padding: 8, border: '1px solid #ddd', borderRadius: 6 }}
+            className={styles.textarea}
           />
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+        <div className={styles.formActions}>
           <button
             onClick={handleSave}
             disabled={!canSave || saving}
-            style={{
-              padding: '8px 16px',
-              cursor: canSave && !saving ? 'pointer' : 'not-allowed',
-            }}
+            className={styles.saveButton}
           >
             {saving ? '저장 중...' : '검색 순위 저장'}
           </button>
         </div>
 
-        {msg && <p style={{ margin: 0, color: '#444' }}>{msg}</p>}
+        {msg && <p className={styles.message}>{msg}</p>}
         {!isFriday(date) && (
-          <p style={{ color: '#d00', margin: 0 }}>
-            ※ 금요일만 저장할 수 있습니다.
-          </p>
+          <p className={styles.warning}>※ 금요일만 저장할 수 있습니다.</p>
         )}
       </div>
 
       {/* 저장된 데이터 테이블 */}
-      <div style={{ marginTop: 24 }}>
-        <h3 style={{ marginBottom: 12 }}>SEO 순위 데이터</h3>
+      <div className={styles.savedData}>
+        <h3 className={styles.savedTitle}>SEO 순위 데이터</h3>
         {Object.keys(allSeoData).length === 0 ? (
           <p>저장된 데이터가 없습니다.</p>
         ) : (
-          <div style={{ display: 'grid', gap: 16 }}>
+          <div className={styles.savedGrid}>
             {Object.entries(allSeoData).map(([d, details]) => {
               const gong = details?.rankings?.gong ?? {};
               const sobang = details?.rankings?.sobang ?? {};
               return (
-                <div
-                  key={d}
-                  style={{
-                    border: '1px solid #e5e5e5',
-                    borderRadius: 8,
-                    padding: 16,
-                    display: 'grid',
-                    gap: 12,
-                  }}
-                >
-                  <p style={{ fontWeight: 600, margin: 0 }}>{d}</p>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: 12,
-                    }}
-                  >
+                <div key={d} className={styles.savedCard}>
+                  <p className={styles.savedDate}>{d}</p>
+                  <div className={styles.tablesGrid}>
                     {/* 공무원 테이블 */}
                     <div>
-                      <h4 style={{ margin: '4px 0' }}>공무원</h4>
-                      <table
-                        style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          border: '1px solid #eee',
-                        }}
-                      >
+                      <h4 className={styles.tableTitle}>공무원</h4>
+                      <table className={styles.dataTable}>
                         <thead>
                           <tr>
-                            <th
-                              style={{
-                                textAlign: 'left',
-                                padding: 8,
-                                borderBottom: '1px solid #eee',
-                              }}
-                            >
-                              핵심키워드
-                            </th>
-                            <th
-                              style={{
-                                textAlign: 'right',
-                                padding: 8,
-                                borderBottom: '1px solid #eee',
-                              }}
-                            >
-                              순위
-                            </th>
+                            <th>핵심키워드</th>
+                            <th>순위</th>
                           </tr>
                         </thead>
                         <tbody>
                           {Object.entries(gong).map(([kw, r]) => (
                             <tr key={kw}>
-                              <td
-                                style={{
-                                  padding: 8,
-                                  borderBottom: '1px solid #f7f7f7',
-                                }}
-                              >
-                                {kw}
-                              </td>
-                              <td
-                                style={{
-                                  padding: 8,
-                                  textAlign: 'right',
-                                  borderBottom: '1px solid #f7f7f7',
-                                }}
-                              >
+                              <td>{kw}</td>
+                              <td>
                                 {r === 'loading'
                                   ? '로딩'
                                   : r === null
@@ -554,54 +432,19 @@ export default function Home() {
 
                     {/* 소방 테이블 */}
                     <div>
-                      <h4 style={{ margin: '4px 0' }}>소방</h4>
-                      <table
-                        style={{
-                          width: '100%',
-                          borderCollapse: 'collapse',
-                          border: '1px solid #eee',
-                        }}
-                      >
+                      <h4 className={styles.tableTitle}>소방</h4>
+                      <table className={styles.dataTable}>
                         <thead>
                           <tr>
-                            <th
-                              style={{
-                                textAlign: 'left',
-                                padding: 8,
-                                borderBottom: '1px solid #eee',
-                              }}
-                            >
-                              핵심키워드
-                            </th>
-                            <th
-                              style={{
-                                textAlign: 'right',
-                                padding: 8,
-                                borderBottom: '1px solid #eee',
-                              }}
-                            >
-                              순위
-                            </th>
+                            <th>핵심키워드</th>
+                            <th>순위</th>
                           </tr>
                         </thead>
                         <tbody>
                           {Object.entries(sobang).map(([kw, r]) => (
                             <tr key={kw}>
-                              <td
-                                style={{
-                                  padding: 8,
-                                  borderBottom: '1px solid #f7f7f7',
-                                }}
-                              >
-                                {kw}
-                              </td>
-                              <td
-                                style={{
-                                  padding: 8,
-                                  textAlign: 'right',
-                                  borderBottom: '1px solid #f7f7f7',
-                                }}
-                              >
+                              <td>{kw}</td>
+                              <td>
                                 {r === 'loading'
                                   ? '로딩'
                                   : r === null
@@ -617,7 +460,7 @@ export default function Home() {
 
                   <div>
                     <strong>비고</strong>
-                    <div style={{ marginTop: 6 }}>
+                    <div className={styles.note}>
                       {renderNote(details?.note)}
                     </div>
                   </div>
