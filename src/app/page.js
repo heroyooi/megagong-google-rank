@@ -113,10 +113,15 @@ function renderNote(note) {
 
 /** rank 표시 텍스트 */
 function rankText(value) {
-  if (value === '오류 발생') return '오류 발생';
-  if (value === 'N/A' || value === null || value === undefined)
+  const rank = getRankValue(value);
+  if (rank === '오류 발생') return '오류 발생';
+  if (rank === 'N/A' || rank === null || rank === undefined)
     return '순위 없음';
-  return `${value}위`;
+  const count =
+    typeof value === 'object' && value.top10Count > 1
+      ? ` / 10위내 포함 ${value.top10Count}건`
+      : '';
+  return count ? `최고 순위 ${rank}위${count}` : `${rank}위`;
 }
 
 // ====== API ======
@@ -131,9 +136,10 @@ async function fetchRank(keyword) {
       keyword,
       rank: data.activeRank ?? 'N/A',
       source: data.sourceUrl || '',
+      top10Count: data.top10Count || 0,
     };
   } catch {
-    return { keyword, rank: '오류 발생', source: '' };
+    return { keyword, rank: '오류 발생', source: '', top10Count: 0 };
   }
 }
 
@@ -145,18 +151,20 @@ async function fetchSequentially(
 ) {
   let results = {};
   let sources = {};
+  let counts = {};
   let failed = [];
 
   // 최초: 로딩 표기
   for (const kw of keywords) {
-    onUpdate(kw, 'loading', ''); // UI에서 "데이터 로드 중..." 같은 표기
+    onUpdate(kw, 'loading', '', 0); // UI에서 "데이터 로드 중..." 같은 표기
   }
 
   for (const kw of keywords) {
     const r = await fetchRank(kw);
     results[r.keyword] = r.rank;
     sources[r.keyword] = r.source;
-    onUpdate(r.keyword, r.rank, r.source);
+    counts[r.keyword] = r.top10Count;
+    onUpdate(r.keyword, r.rank, r.source, r.top10Count);
     if (r.rank === '오류 발생') failed.push(r.keyword);
     await delay(1000); // 서버 부하 방지
   }
@@ -166,18 +174,19 @@ async function fetchSequentially(
     const retryTargets = [...failed];
     failed = [];
     for (const kw of retryTargets) {
-      onUpdate(kw, 'loading', '');
+      onUpdate(kw, 'loading', '', 0);
       const r = await fetchRank(kw);
       results[r.keyword] = r.rank;
       sources[r.keyword] = r.source;
-      onUpdate(r.keyword, r.rank, r.source);
+      counts[r.keyword] = r.top10Count;
+      onUpdate(r.keyword, r.rank, r.source, r.top10Count);
       if (r.rank === '오류 발생') failed.push(r.keyword);
       await delay(1000);
     }
     retryCount -= 1;
   }
 
-  return { ranks: results, sources };
+  return { ranks: results, sources, counts };
 }
 
 /** Firestore: 저장 */
@@ -263,6 +272,8 @@ export default function Home() {
   const [sobangState, setSobangState] = useState({});
   const [gongSource, setGongSource] = useState({});
   const [sobangSource, setSobangSource] = useState({});
+  const [gongCount, setGongCount] = useState({});
+  const [sobangCount, setSobangCount] = useState({});
   const [isGongDone, setIsGongDone] = useState(false);
   const [isSobangDone, setIsSobangDone] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -377,12 +388,18 @@ export default function Home() {
     const initGs = {};
     gongKeywords.forEach((k) => (initGs[k] = ''));
     setGongSource(initGs);
+    const initGc = {};
+    gongKeywords.forEach((k) => (initGc[k] = 0));
+    setGongCount(initGc);
     const initS = {};
     sobangKeywords.forEach((k) => (initS[k] = null));
     setSobangState(initS);
     const initSs = {};
     sobangKeywords.forEach((k) => (initSs[k] = ''));
     setSobangSource(initSs);
+    const initSc = {};
+    sobangKeywords.forEach((k) => (initSc[k] = 0));
+    setSobangCount(initSc);
   }, []);
 
   const handleFetchGong = async () => {
@@ -390,15 +407,23 @@ export default function Home() {
     setMsg(null);
     const nextRank = { ...gongState };
     const nextSrc = { ...gongSource };
-    const result = await fetchSequentially(gongKeywords, 5, (kw, val, src) => {
-      nextRank[kw] = val;
-      nextSrc[kw] = src;
-      setGongState({ ...nextRank });
-      setGongSource({ ...nextSrc });
-    });
+    const nextCount = { ...gongCount };
+    const result = await fetchSequentially(
+      gongKeywords,
+      5,
+      (kw, val, src, cnt) => {
+        nextRank[kw] = val;
+        nextSrc[kw] = src;
+        nextCount[kw] = cnt;
+        setGongState({ ...nextRank });
+        setGongSource({ ...nextSrc });
+        setGongCount({ ...nextCount });
+      }
+    );
     // 결과 반영
     setGongState((prev) => ({ ...prev, ...result.ranks }));
     setGongSource((prev) => ({ ...prev, ...result.sources }));
+    setGongCount((prev) => ({ ...prev, ...result.counts }));
     setIsGongDone(true);
     setMsg('공무원 키워드 순위 가져오기가 완료되었습니다.');
   };
@@ -408,18 +433,22 @@ export default function Home() {
     setMsg(null);
     const nextRank = { ...sobangState };
     const nextSrc = { ...sobangSource };
+    const nextCount = { ...sobangCount };
     const result = await fetchSequentially(
       sobangKeywords,
       5,
-      (kw, val, src) => {
+      (kw, val, src, cnt) => {
         nextRank[kw] = val;
         nextSrc[kw] = src;
+        nextCount[kw] = cnt;
         setSobangState({ ...nextRank });
         setSobangSource({ ...nextSrc });
+        setSobangCount({ ...nextCount });
       }
     );
     setSobangState((prev) => ({ ...prev, ...result.ranks }));
     setSobangSource((prev) => ({ ...prev, ...result.sources }));
+    setSobangCount((prev) => ({ ...prev, ...result.counts }));
     setIsSobangDone(true);
     setMsg('소방 키워드 순위 가져오기가 완료되었습니다.');
   };
@@ -443,14 +472,18 @@ export default function Home() {
     try {
       setSaving(true);
       setMsg(null);
-      const combine = (keywords, ranks, sources) =>
+      const combine = (keywords, ranks, sources, counts) =>
         Object.fromEntries(
-          keywords.map((kw) => [kw, { rank: ranks[kw], source: sources[kw] }])
+          keywords.map((kw) => {
+            const entry = { rank: ranks[kw], source: sources[kw] };
+            if (counts[kw] > 1) entry.top10Count = counts[kw];
+            return [kw, entry];
+          })
         );
 
       const rankings = {
-        gong: combine(gongKeywords, gongState, gongSource),
-        sobang: combine(sobangKeywords, sobangState, sobangSource),
+        gong: combine(gongKeywords, gongState, gongSource, gongCount),
+        sobang: combine(sobangKeywords, sobangState, sobangSource, sobangCount),
       };
       await logSeoData({ date, note: note.trim(), rankings });
       setNote('');
@@ -489,7 +522,10 @@ export default function Home() {
                       ? '로드중'
                       : gongState[kw] === null
                       ? '집계전'
-                      : rankText(gongState[kw])}
+                      : rankText({
+                          rank: gongState[kw],
+                          top10Count: gongCount[kw],
+                        })}
                   </em>
                   {gongSource[kw] && gongState[kw] !== 'loading' && (
                     <a
@@ -524,7 +560,10 @@ export default function Home() {
                       ? '로드중'
                       : sobangState[kw] === null
                       ? '집계전'
-                      : rankText(sobangState[kw])}
+                      : rankText({
+                          rank: sobangState[kw],
+                          top10Count: sobangCount[kw],
+                        })}
                   </em>
                   {sobangSource[kw] && sobangState[kw] !== 'loading' && (
                     <a
@@ -691,7 +730,7 @@ export default function Home() {
                                       ? '로딩'
                                       : value === null
                                       ? '집계전'
-                                      : rankText(value)}
+                                      : rankText(r)}
                                     {src && (
                                       <a
                                         className={styles.tableSource}
@@ -742,7 +781,7 @@ export default function Home() {
                                         ? '로딩'
                                         : value === null
                                         ? '집계전'
-                                        : rankText(value)}
+                                        : rankText(r)}
                                       {src && (
                                         <a
                                           className={styles.tableSource}

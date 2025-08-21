@@ -36,6 +36,7 @@ export default async function handler(req, res) {
     let searchResults = [];
     let foundMegagongRank = null;
     let foundMegagongUrl = null;
+    let megagongTop10Count = 0;
 
     while (currentPage <= 5) {
       const searchURL = `https://www.google.com/search?q=${encodeURIComponent(
@@ -66,6 +67,9 @@ export default async function handler(req, res) {
       const megagongResult = searchResults.find((result) =>
         result.url.includes('megagong.net')
       );
+      megagongTop10Count = searchResults.filter(
+        (r) => r.url.includes('megagong.net') && r.rank <= 10
+      ).length;
 
       if (megagongResult) {
         foundMegagongRank = megagongResult.rank;
@@ -82,6 +86,7 @@ export default async function handler(req, res) {
       keyword,
       activeRank: foundMegagongRank ? foundMegagongRank : 'N/A',
       sourceUrl: foundMegagongUrl,
+      top10Count: megagongTop10Count,
       results: searchResults,
     });
   } catch (error) {
