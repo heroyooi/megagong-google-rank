@@ -122,9 +122,9 @@ async function fetchRank(keyword) {
     });
     if (!res.ok) throw new Error('검색 실패');
     const data = await res.json();
-    return { keyword, rank: data.activeRank ?? 'N/A' };
+    return { keyword, rank: data.activeRank ?? 'N/A', source: data.sourceUrl || '' };
   } catch {
-    return { keyword, rank: '오류 발생' };
+    return { keyword, rank: '오류 발생', source: '' };
   }
 }
 
@@ -135,17 +135,19 @@ async function fetchSequentially(
   onUpdate = () => {}
 ) {
   let results = {};
+  let sources = {};
   let failed = [];
 
   // 최초: 로딩 표기
   for (const kw of keywords) {
-    onUpdate(kw, 'loading'); // UI에서 "데이터 로드 중..." 같은 표기
+    onUpdate(kw, 'loading', ''); // UI에서 "데이터 로드 중..." 같은 표기
   }
 
   for (const kw of keywords) {
     const r = await fetchRank(kw);
     results[r.keyword] = r.rank;
-    onUpdate(r.keyword, r.rank);
+    sources[r.keyword] = r.source;
+    onUpdate(r.keyword, r.rank, r.source);
     if (r.rank === '오류 발생') failed.push(r.keyword);
     await delay(1000); // 서버 부하 방지
   }
@@ -155,17 +157,18 @@ async function fetchSequentially(
     const retryTargets = [...failed];
     failed = [];
     for (const kw of retryTargets) {
-      onUpdate(kw, 'loading');
+      onUpdate(kw, 'loading', '');
       const r = await fetchRank(kw);
       results[r.keyword] = r.rank;
-      onUpdate(r.keyword, r.rank);
+      sources[r.keyword] = r.source;
+      onUpdate(r.keyword, r.rank, r.source);
       if (r.rank === '오류 발생') failed.push(r.keyword);
       await delay(1000);
     }
     retryCount -= 1;
   }
 
-  return results;
+  return { ranks: results, sources };
 }
 
 /** Firestore: 저장 */
@@ -220,6 +223,8 @@ export default function Home() {
   const [note, setNote] = useState('');
   const [gongState, setGongState] = useState({}); // {keyword: rank|'loading'|undefined}
   const [sobangState, setSobangState] = useState({});
+  const [gongSource, setGongSource] = useState({});
+  const [sobangSource, setSobangSource] = useState({});
   const [isGongDone, setIsGongDone] = useState(false);
   const [isSobangDone, setIsSobangDone] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -242,21 +247,31 @@ export default function Home() {
     const initG = {};
     gongKeywords.forEach((k) => (initG[k] = null));
     setGongState(initG);
+    const initGs = {};
+    gongKeywords.forEach((k) => (initGs[k] = ''));
+    setGongSource(initGs);
     const initS = {};
     sobangKeywords.forEach((k) => (initS[k] = null));
     setSobangState(initS);
+    const initSs = {};
+    sobangKeywords.forEach((k) => (initSs[k] = ''));
+    setSobangSource(initSs);
   }, []);
 
   const handleFetchGong = async () => {
     setIsGongDone(false);
     setMsg(null);
-    const next = { ...gongState };
-    const result = await fetchSequentially(gongKeywords, 5, (kw, val) => {
-      next[kw] = val;
-      setGongState({ ...next });
+    const nextRank = { ...gongState };
+    const nextSrc = { ...gongSource };
+    const result = await fetchSequentially(gongKeywords, 5, (kw, val, src) => {
+      nextRank[kw] = val;
+      nextSrc[kw] = src;
+      setGongState({ ...nextRank });
+      setGongSource({ ...nextSrc });
     });
     // 결과 반영
-    setGongState((prev) => ({ ...prev, ...result }));
+    setGongState((prev) => ({ ...prev, ...result.ranks }));
+    setGongSource((prev) => ({ ...prev, ...result.sources }));
     setIsGongDone(true);
     setMsg('공무원 키워드 순위 가져오기가 완료되었습니다.');
   };
@@ -264,12 +279,16 @@ export default function Home() {
   const handleFetchSobang = async () => {
     setIsSobangDone(false);
     setMsg(null);
-    const next = { ...sobangState };
-    const result = await fetchSequentially(sobangKeywords, 5, (kw, val) => {
-      next[kw] = val;
-      setSobangState({ ...next });
+    const nextRank = { ...sobangState };
+    const nextSrc = { ...sobangSource };
+    const result = await fetchSequentially(sobangKeywords, 5, (kw, val, src) => {
+      nextRank[kw] = val;
+      nextSrc[kw] = src;
+      setSobangState({ ...nextRank });
+      setSobangSource({ ...nextSrc });
     });
-    setSobangState((prev) => ({ ...prev, ...result }));
+    setSobangState((prev) => ({ ...prev, ...result.ranks }));
+    setSobangSource((prev) => ({ ...prev, ...result.sources }));
     setIsSobangDone(true);
     setMsg('소방 키워드 순위 가져오기가 완료되었습니다.');
   };
@@ -331,6 +350,11 @@ export default function Home() {
                     : gongState[kw] === null
                     ? '집계전'
                     : rankText(gongState[kw])}
+                  {gongSource[kw] && gongState[kw] !== 'loading' && (
+                    <small className={styles.keywordSource}>
+                      {gongSource[kw]}
+                    </small>
+                  )}
                 </span>
               </li>
             ))}
@@ -354,6 +378,11 @@ export default function Home() {
                     : sobangState[kw] === null
                     ? '집계전'
                     : rankText(sobangState[kw])}
+                  {sobangSource[kw] && sobangState[kw] !== 'loading' && (
+                    <small className={styles.keywordSource}>
+                      {sobangSource[kw]}
+                    </small>
+                  )}
                 </span>
               </li>
             ))}

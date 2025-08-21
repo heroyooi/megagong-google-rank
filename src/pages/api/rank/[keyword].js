@@ -35,6 +35,7 @@ export default async function handler(req, res) {
     let currentPage = 1;
     let searchResults = [];
     let foundMegagongRank = null;
+    let foundMegagongUrl = null;
 
     while (currentPage <= 5) {
       const searchURL = `https://www.google.com/search?q=${encodeURIComponent(
@@ -68,6 +69,7 @@ export default async function handler(req, res) {
 
       if (megagongResult) {
         foundMegagongRank = megagongResult.rank;
+        foundMegagongUrl = megagongResult.url;
         break;
       }
 
@@ -79,6 +81,7 @@ export default async function handler(req, res) {
     res.status(200).json({
       keyword,
       activeRank: foundMegagongRank ? foundMegagongRank : 'N/A',
+      sourceUrl: foundMegagongUrl,
       results: searchResults,
     });
   } catch (error) {
