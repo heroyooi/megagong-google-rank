@@ -244,8 +244,7 @@ function renderChange(curr, prev) {
   )
     return null;
   const diff = p - c;
-  if (diff === 0)
-    return <span className={styles.rankChange}>(-0)</span>;
+  if (diff === 0) return <span className={styles.rankChange}>(-)</span>;
   const symbol = diff > 0 ? '▲' : '▼';
   const cls = diff > 0 ? styles.rankChangeUp : styles.rankChangeDown;
   return (
@@ -423,7 +422,9 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>NS (Next SEO Master)</h1>
+      <h1 className={styles.title}>
+        NS <span>(Next SEO Master)</span>
+      </h1>
       <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
       <p className={styles.notice}>매주 금요일만 저장 가능합니다.</p>
 
@@ -580,121 +581,127 @@ export default function Home() {
                 const prevSobang = prevDetails?.rankings?.sobang ?? {};
                 return (
                   <div key={d} className={styles.savedCard}>
-                  <div className={styles.savedHeader}>
-                    <p className={styles.savedDate}>{d}</p>
-                    <button
-                      className={styles.deleteButton}
-                      onClick={() => handleDelete(d)}
-                    >
-                      삭제
-                    </button>
-                  </div>
-                  <div className={styles.tablesGrid}>
-                    {/* 공무원 테이블 */}
-                    <div>
-                      <h4 className={styles.tableTitle}>공무원</h4>
-                      <table className={styles.dataTable}>
-                        <colgroup>
-                          <col width='45%' />
-                          <col width='*' />
-                        </colgroup>
-                        <thead>
-                          <tr>
-                            <th>핵심키워드</th>
-                            <th>순위</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(gong).map(([kw, r]) => {
-                            const value = getRankValue(r);
-                            const src =
-                              typeof r === 'object' && r.source ? r.source : '';
-                            const prevValue = prevGong[kw];
-                            return (
-                              <tr key={kw}>
-                                <td>{kw}</td>
-                                <td>
-                                  {prevDetails && renderChange(value, prevValue)}
-                                  {value === 'loading'
-                                    ? '로딩'
-                                    : value === null
-                                    ? '집계전'
-                                    : rankText(value)}
-                                  {src && (
-                                    <a
-                                      className={styles.tableSource}
-                                      href={src}
-                                      target='_blank'
-                                      rel='noopener noreferrer'
-                                    >
-                                      {src.replace(/^https?:\/\//, '')}
-                                    </a>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                    <div className={styles.savedHeader}>
+                      <p className={styles.savedDate}>{d}</p>
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => handleDelete(d)}
+                      >
+                        삭제
+                      </button>
+                    </div>
+                    <div className={styles.tablesGrid}>
+                      {/* 공무원 테이블 */}
+                      <div>
+                        <h4 className={styles.tableTitle}>공무원</h4>
+                        <table className={styles.dataTable}>
+                          <colgroup>
+                            <col width='45%' />
+                            <col width='*' />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th>핵심키워드</th>
+                              <th>순위</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(gong).map(([kw, r]) => {
+                              const value = getRankValue(r);
+                              const src =
+                                typeof r === 'object' && r.source
+                                  ? r.source
+                                  : '';
+                              const prevValue = prevGong[kw];
+                              return (
+                                <tr key={kw}>
+                                  <td>{kw}</td>
+                                  <td>
+                                    {prevDetails &&
+                                      renderChange(value, prevValue)}
+                                    {value === 'loading'
+                                      ? '로딩'
+                                      : value === null
+                                      ? '집계전'
+                                      : rankText(value)}
+                                    {src && (
+                                      <a
+                                        className={styles.tableSource}
+                                        href={src}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                      >
+                                        {src.replace(/^https?:\/\//, '')}
+                                      </a>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      {/* 소방 테이블 */}
+                      <div>
+                        <h4 className={styles.tableTitle}>소방</h4>
+                        <table className={styles.dataTable}>
+                          <colgroup>
+                            <col width='45%' />
+                            <col width='*' />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th>핵심키워드</th>
+                              <th>순위</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {Object.entries(sobang).map(([kw, r]) => {
+                              const value = getRankValue(r);
+                              const src =
+                                typeof r === 'object' && r.source
+                                  ? r.source
+                                  : '';
+                              const prevValue = prevSobang[kw];
+                              return (
+                                <tr key={kw}>
+                                  <td>{kw}</td>
+                                  <td>
+                                    {prevDetails &&
+                                      renderChange(value, prevValue)}
+                                    {value === 'loading'
+                                      ? '로딩'
+                                      : value === null
+                                      ? '집계전'
+                                      : rankText(value)}
+                                    {src && (
+                                      <a
+                                        className={styles.tableSource}
+                                        href={src}
+                                        target='_blank'
+                                        rel='noopener noreferrer'
+                                      >
+                                        {src.replace(/^https?:\/\//, '')}
+                                      </a>
+                                    )}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
                     </div>
 
-                    {/* 소방 테이블 */}
                     <div>
-                      <h4 className={styles.tableTitle}>소방</h4>
-                      <table className={styles.dataTable}>
-                        <colgroup>
-                          <col width='45%' />
-                          <col width='*' />
-                        </colgroup>
-                        <thead>
-                          <tr>
-                            <th>핵심키워드</th>
-                            <th>순위</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(sobang).map(([kw, r]) => {
-                            const value = getRankValue(r);
-                            const src =
-                              typeof r === 'object' && r.source ? r.source : '';
-                            const prevValue = prevSobang[kw];
-                            return (
-                              <tr key={kw}>
-                                <td>{kw}</td>
-                                <td>
-                                  {prevDetails && renderChange(value, prevValue)}
-                                  {value === 'loading'
-                                    ? '로딩'
-                                    : value === null
-                                    ? '집계전'
-                                    : rankText(value)}
-                                  {src && (
-                                    <a
-                                      className={styles.tableSource}
-                                      href={src}
-                                      target='_blank'
-                                      rel='noopener noreferrer'
-                                    >
-                                      {src.replace(/^https?:\/\//, '')}
-                                    </a>
-                                  )}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
+                      <strong>비고</strong>
+                      <div className={styles.note}>
+                        {renderNote(details?.note)}
+                      </div>
                     </div>
                   </div>
-
-                  <div>
-                    <strong>비고</strong>
-                    <div className={styles.note}>
-                      {renderNote(details?.note)}
-                    </div>
-                  </div>
-                </div>
-              );
+                );
               })}
             </div>
           </>
