@@ -141,6 +141,13 @@
               }
             }
 
+            .keywordDetail {
+              margin-top: 2px;
+              font-size: 12px;
+              font-weight: 400;
+              color: var(--text-sub);
+            }
+
             .keywordSource {
               margin-top: 2px;
               font-size: 12px;
@@ -474,6 +481,13 @@
               font-size: 11px;
               color: var(--text-sub);
               text-decoration: none;
+            }
+
+            .tableRankDetail {
+              display: block;
+              margin-top: 2px;
+              font-size: 11px;
+              color: var(--text-sub);
             }
 
             .rankChange {

@@ -114,14 +114,19 @@ function renderNote(note) {
 /** rank 표시 텍스트 */
 function rankText(value) {
   const rank = getRankValue(value);
-  if (rank === '오류 발생') return '오류 발생';
+  if (rank === '오류 발생') return { primary: '오류 발생', detail: '' };
   if (rank === 'N/A' || rank === null || rank === undefined)
-    return '순위 없음';
+    return { primary: '순위 없음', detail: '' };
   const count =
     typeof value === 'object' && value.top10Count > 1
-      ? ` / 10위내 포함 ${value.top10Count}건`
-      : '';
-  return count ? `최고 순위 ${rank}위${count}` : `${rank}위`;
+      ? value.top10Count
+      : 0;
+  return {
+    primary: `${rank}위`,
+    detail: count
+      ? `최고 순위 ${rank}위 / 10위내 포함 ${count}건`
+      : '',
+  };
 }
 
 // ====== API ======
@@ -512,34 +517,39 @@ export default function Home() {
             <button onClick={handleFetchGong}>순위 가져오기</button>
           </div>
           <ul className={styles.keywordList}>
-            {gongKeywords.map((kw, idx) => (
-              <li key={kw} className={styles.keywordItem}>
-                <span>{idx + 1}</span>
-                <span>{kw}</span>
-                <span className={styles.keywordRank}>
-                  <em>
-                    {gongState[kw] === 'loading'
-                      ? '로드중'
-                      : gongState[kw] === null
-                      ? '집계전'
-                      : rankText({
-                          rank: gongState[kw],
-                          top10Count: gongCount[kw],
-                        })}
-                  </em>
-                  {gongSource[kw] && gongState[kw] !== 'loading' && (
-                    <a
-                      className={styles.keywordSource}
-                      href={gongSource[kw]}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      {gongSource[kw].replace(/^https?:\/\//, '')}
-                    </a>
-                  )}
-                </span>
-              </li>
-            ))}
+            {gongKeywords.map((kw, idx) => {
+              const info =
+                gongState[kw] === 'loading'
+                  ? { primary: '로드중', detail: '' }
+                  : gongState[kw] === null
+                  ? { primary: '집계전', detail: '' }
+                  : rankText({
+                      rank: gongState[kw],
+                      top10Count: gongCount[kw],
+                    });
+              return (
+                <li key={kw} className={styles.keywordItem}>
+                  <span>{idx + 1}</span>
+                  <span>{kw}</span>
+                  <span className={styles.keywordRank}>
+                    <em>{info.primary}</em>
+                    {info.detail && (
+                      <span className={styles.keywordDetail}>{info.detail}</span>
+                    )}
+                    {gongSource[kw] && gongState[kw] !== 'loading' && (
+                      <a
+                        className={styles.keywordSource}
+                        href={gongSource[kw]}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {gongSource[kw].replace(/^https?:\/\//, '')}
+                      </a>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
 
@@ -550,34 +560,39 @@ export default function Home() {
             <button onClick={handleFetchSobang}>순위 가져오기</button>
           </div>
           <ul className={styles.keywordList}>
-            {sobangKeywords.map((kw, idx) => (
-              <li key={kw} className={styles.keywordItem}>
-                <span>{idx + 1}</span>
-                <span>{kw}</span>
-                <span className={styles.keywordRank}>
-                  <em>
-                    {sobangState[kw] === 'loading'
-                      ? '로드중'
-                      : sobangState[kw] === null
-                      ? '집계전'
-                      : rankText({
-                          rank: sobangState[kw],
-                          top10Count: sobangCount[kw],
-                        })}
-                  </em>
-                  {sobangSource[kw] && sobangState[kw] !== 'loading' && (
-                    <a
-                      className={styles.keywordSource}
-                      href={sobangSource[kw]}
-                      target='_blank'
-                      rel='noopener noreferrer'
-                    >
-                      {sobangSource[kw].replace(/^https?:\/\//, '')}
-                    </a>
-                  )}
-                </span>
-              </li>
-            ))}
+            {sobangKeywords.map((kw, idx) => {
+              const info =
+                sobangState[kw] === 'loading'
+                  ? { primary: '로드중', detail: '' }
+                  : sobangState[kw] === null
+                  ? { primary: '집계전', detail: '' }
+                  : rankText({
+                      rank: sobangState[kw],
+                      top10Count: sobangCount[kw],
+                    });
+              return (
+                <li key={kw} className={styles.keywordItem}>
+                  <span>{idx + 1}</span>
+                  <span>{kw}</span>
+                  <span className={styles.keywordRank}>
+                    <em>{info.primary}</em>
+                    {info.detail && (
+                      <span className={styles.keywordDetail}>{info.detail}</span>
+                    )}
+                    {sobangSource[kw] && sobangState[kw] !== 'loading' && (
+                      <a
+                        className={styles.keywordSource}
+                        href={sobangSource[kw]}
+                        target='_blank'
+                        rel='noopener noreferrer'
+                      >
+                        {sobangSource[kw].replace(/^https?:\/\//, '')}
+                      </a>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ul>
         </div>
       </div>
@@ -720,17 +735,24 @@ export default function Home() {
                                   ? r.source
                                   : '';
                               const prevValue = prevGong[kw];
+                              const info =
+                                value === 'loading'
+                                  ? { primary: '로딩', detail: '' }
+                                  : value === null
+                                  ? { primary: '집계전', detail: '' }
+                                  : rankText(r);
                               return (
                                 <tr key={kw}>
                                   <td>{kw}</td>
                                   <td>
                                     {prevDetails &&
                                       renderChange(value, prevValue)}
-                                    {value === 'loading'
-                                      ? '로딩'
-                                      : value === null
-                                      ? '집계전'
-                                      : rankText(r)}
+                                    {info.primary}
+                                    {info.detail && (
+                                      <span className={styles.tableRankDetail}>
+                                        {info.detail}
+                                      </span>
+                                    )}
                                     {src && (
                                       <a
                                         className={styles.tableSource}
@@ -771,17 +793,24 @@ export default function Home() {
                                     ? r.source
                                     : '';
                                 const prevValue = prevSobang[kw];
+                                const info =
+                                  value === 'loading'
+                                    ? { primary: '로딩', detail: '' }
+                                    : value === null
+                                    ? { primary: '집계전', detail: '' }
+                                    : rankText(r);
                                 return (
                                   <tr key={kw}>
                                     <td>{kw}</td>
                                     <td>
                                       {prevDetails &&
                                         renderChange(value, prevValue)}
-                                      {value === 'loading'
-                                        ? '로딩'
-                                        : value === null
-                                        ? '집계전'
-                                        : rankText(r)}
+                                      {info.primary}
+                                      {info.detail && (
+                                        <span className={styles.tableRankDetail}>
+                                          {info.detail}
+                                        </span>
+                                      )}
                                       {src && (
                                         <a
                                           className={styles.tableSource}
