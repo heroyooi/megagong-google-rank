@@ -341,7 +341,8 @@ export default function Home() {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>구글 검색 순위 비교(SEO)</h1>
+      <h1 className={styles.title}>NS (Next SEO Master)</h1>
+      <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
       <p className={styles.notice}>매주 금요일만 저장 가능합니다.</p>
 
       {/* 크롤링 영역 */}
@@ -462,7 +463,7 @@ export default function Home() {
 
       {/* 저장된 데이터 테이블 */}
       <div className={styles.savedData}>
-        <h3 className={styles.savedTitle}>SEO 순위 데이터</h3>
+        <h3 className={styles.subTitle}>SEO 순위 데이터</h3>
         {Object.keys(allSeoData).length === 0 ? (
           <p>저장된 데이터가 없습니다.</p>
         ) : (
