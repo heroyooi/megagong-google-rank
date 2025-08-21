@@ -118,14 +118,10 @@ function rankText(value) {
   if (rank === 'N/A' || rank === null || rank === undefined)
     return { primary: '순위 없음', detail: '' };
   const count =
-    typeof value === 'object' && value.top10Count > 1
-      ? value.top10Count
-      : 0;
+    typeof value === 'object' && value.top10Count > 1 ? value.top10Count : 0;
   return {
     primary: `${rank}위`,
-    detail: count
-      ? `최고 순위 ${rank}위 / 10위내 포함 ${count}건`
-      : '',
+    detail: count ? `최고 순위 ${rank}위 / 10위내 포함 ${count}건` : '',
   };
 }
 
@@ -285,15 +281,13 @@ export default function Home() {
   const [msg, setMsg] = useState(null);
 
   const allSeoData = useSeoDataRealtime();
-  const seoEntries = useMemo(
-    () => Object.entries(allSeoData),
-    [allSeoData]
-  );
+  const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
   const [openCards, setOpenCards] = useState({});
 
   const { gongChartOptions, sobangChartOptions } = useMemo(() => {
-    if (seoEntries.length === 0) return { gongChartOptions: null, sobangChartOptions: null };
+    if (seoEntries.length === 0)
+      return { gongChartOptions: null, sobangChartOptions: null };
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
@@ -406,6 +400,13 @@ export default function Home() {
     sobangKeywords.forEach((k) => (initSc[k] = 0));
     setSobangCount(initSc);
   }, []);
+
+  useEffect(() => {
+    if (seoEntries.length > 0) {
+      const latestDate = seoEntries[0][0];
+      setOpenCards({ [latestDate]: true });
+    }
+  }, [seoEntries]);
 
   const handleFetchGong = async () => {
     setIsGongDone(false);
@@ -534,7 +535,9 @@ export default function Home() {
                   <span className={styles.keywordRank}>
                     <em>{info.primary}</em>
                     {info.detail && (
-                      <span className={styles.keywordDetail}>{info.detail}</span>
+                      <span className={styles.keywordDetail}>
+                        {info.detail}
+                      </span>
                     )}
                     {gongSource[kw] && gongState[kw] !== 'loading' && (
                       <a
@@ -577,7 +580,9 @@ export default function Home() {
                   <span className={styles.keywordRank}>
                     <em>{info.primary}</em>
                     {info.detail && (
-                      <span className={styles.keywordDetail}>{info.detail}</span>
+                      <span className={styles.keywordDetail}>
+                        {info.detail}
+                      </span>
                     )}
                     {sobangSource[kw] && sobangState[kw] !== 'loading' && (
                       <a
@@ -717,125 +722,129 @@ export default function Home() {
                           <div>
                             <h4 className={styles.tableTitle}>공무원</h4>
                             <table className={styles.dataTable}>
-                          <colgroup>
-                            <col width='45%' />
-                            <col width='*' />
-                          </colgroup>
-                          <thead>
-                            <tr>
-                              <th>핵심키워드</th>
-                              <th>순위</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {Object.entries(gong).map(([kw, r]) => {
-                              const value = getRankValue(r);
-                              const src =
-                                typeof r === 'object' && r.source
-                                  ? r.source
-                                  : '';
-                              const prevValue = prevGong[kw];
-                              const info =
-                                value === 'loading'
-                                  ? { primary: '로딩', detail: '' }
-                                  : value === null
-                                  ? { primary: '집계전', detail: '' }
-                                  : rankText(r);
-                              return (
-                                <tr key={kw}>
-                                  <td>{kw}</td>
-                                  <td>
-                                    {prevDetails &&
-                                      renderChange(value, prevValue)}
-                                    {info.primary}
-                                    {info.detail && (
-                                      <span className={styles.tableRankDetail}>
-                                        {info.detail}
-                                      </span>
-                                    )}
-                                    {src && (
-                                      <a
-                                        className={styles.tableSource}
-                                        href={src}
-                                        target='_blank'
-                                        rel='noopener noreferrer'
-                                      >
-                                        {src.replace(/^https?:\/\//, '')}
-                                      </a>
-                                    )}
-                                  </td>
+                              <colgroup>
+                                <col width='45%' />
+                                <col width='*' />
+                              </colgroup>
+                              <thead>
+                                <tr>
+                                  <th>핵심키워드</th>
+                                  <th>순위</th>
                                 </tr>
-                              );
-                            })}
-                          </tbody>
-                        </table>
-                      </div>
+                              </thead>
+                              <tbody>
+                                {Object.entries(gong).map(([kw, r]) => {
+                                  const value = getRankValue(r);
+                                  const src =
+                                    typeof r === 'object' && r.source
+                                      ? r.source
+                                      : '';
+                                  const prevValue = prevGong[kw];
+                                  const info =
+                                    value === 'loading'
+                                      ? { primary: '로딩', detail: '' }
+                                      : value === null
+                                      ? { primary: '집계전', detail: '' }
+                                      : rankText(r);
+                                  return (
+                                    <tr key={kw}>
+                                      <td>{kw}</td>
+                                      <td>
+                                        {prevDetails &&
+                                          renderChange(value, prevValue)}
+                                        {info.primary}
+                                        {info.detail && (
+                                          <span
+                                            className={styles.tableRankDetail}
+                                          >
+                                            {info.detail}
+                                          </span>
+                                        )}
+                                        {src && (
+                                          <a
+                                            className={styles.tableSource}
+                                            href={src}
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                          >
+                                            {src.replace(/^https?:\/\//, '')}
+                                          </a>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
 
-                        {/* 소방 테이블 */}
+                          {/* 소방 테이블 */}
+                          <div>
+                            <h4 className={styles.tableTitle}>소방</h4>
+                            <table className={styles.dataTable}>
+                              <colgroup>
+                                <col width='45%' />
+                                <col width='*' />
+                              </colgroup>
+                              <thead>
+                                <tr>
+                                  <th>핵심키워드</th>
+                                  <th>순위</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {Object.entries(sobang).map(([kw, r]) => {
+                                  const value = getRankValue(r);
+                                  const src =
+                                    typeof r === 'object' && r.source
+                                      ? r.source
+                                      : '';
+                                  const prevValue = prevSobang[kw];
+                                  const info =
+                                    value === 'loading'
+                                      ? { primary: '로딩', detail: '' }
+                                      : value === null
+                                      ? { primary: '집계전', detail: '' }
+                                      : rankText(r);
+                                  return (
+                                    <tr key={kw}>
+                                      <td>{kw}</td>
+                                      <td>
+                                        {prevDetails &&
+                                          renderChange(value, prevValue)}
+                                        {info.primary}
+                                        {info.detail && (
+                                          <span
+                                            className={styles.tableRankDetail}
+                                          >
+                                            {info.detail}
+                                          </span>
+                                        )}
+                                        {src && (
+                                          <a
+                                            className={styles.tableSource}
+                                            href={src}
+                                            target='_blank'
+                                            rel='noopener noreferrer'
+                                          >
+                                            {src.replace(/^https?:\/\//, '')}
+                                          </a>
+                                        )}
+                                      </td>
+                                    </tr>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+
                         <div>
-                          <h4 className={styles.tableTitle}>소방</h4>
-                          <table className={styles.dataTable}>
-                            <colgroup>
-                              <col width='45%' />
-                              <col width='*' />
-                            </colgroup>
-                            <thead>
-                              <tr>
-                                <th>핵심키워드</th>
-                                <th>순위</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(sobang).map(([kw, r]) => {
-                                const value = getRankValue(r);
-                                const src =
-                                  typeof r === 'object' && r.source
-                                    ? r.source
-                                    : '';
-                                const prevValue = prevSobang[kw];
-                                const info =
-                                  value === 'loading'
-                                    ? { primary: '로딩', detail: '' }
-                                    : value === null
-                                    ? { primary: '집계전', detail: '' }
-                                    : rankText(r);
-                                return (
-                                  <tr key={kw}>
-                                    <td>{kw}</td>
-                                    <td>
-                                      {prevDetails &&
-                                        renderChange(value, prevValue)}
-                                      {info.primary}
-                                      {info.detail && (
-                                        <span className={styles.tableRankDetail}>
-                                          {info.detail}
-                                        </span>
-                                      )}
-                                      {src && (
-                                        <a
-                                          className={styles.tableSource}
-                                          href={src}
-                                          target='_blank'
-                                          rel='noopener noreferrer'
-                                        >
-                                          {src.replace(/^https?:\/\//, '')}
-                                        </a>
-                                      )}
-                                    </td>
-                                  </tr>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                          <strong>비고</strong>
+                          <div className={styles.note}>
+                            {renderNote(details?.note)}
+                          </div>
                         </div>
-                      </div>
-
-                      <div>
-                        <strong>비고</strong>
-                        <div className={styles.note}>
-                          {renderNote(details?.note)}
-                        </div>
-                      </div>
                       </>
                     )}
                   </div>
