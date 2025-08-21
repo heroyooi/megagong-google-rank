@@ -43,3 +43,22 @@
     animation: none !important;
   }
 }
+
+header {
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+}
+
+header img {
+  height: 40px;
+}
+
+footer {
+  padding: 2rem 1rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-sub);
+  background: var(--bg-soft);
+  line-height: 1.4;
+}
