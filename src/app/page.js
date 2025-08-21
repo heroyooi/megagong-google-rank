@@ -327,7 +327,7 @@ export default function Home() {
                 <span>{kw}</span>
                 <span className={styles.keywordRank}>
                   {gongState[kw] === 'loading'
-                    ? '데이터 로드 중...'
+                    ? '로드중'
                     : gongState[kw] === null
                     ? '집계전'
                     : rankText(gongState[kw])}
@@ -350,7 +350,7 @@ export default function Home() {
                 <span>{kw}</span>
                 <span className={styles.keywordRank}>
                   {sobangState[kw] === 'loading'
-                    ? '데이터 로드 중...'
+                    ? '로드중'
                     : sobangState[kw] === null
                     ? '집계전'
                     : rankText(sobangState[kw])}
