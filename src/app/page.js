@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import dynamic from 'next/dynamic';
 import styles from './page.module.scss';
 
@@ -269,16 +269,12 @@ export default function Home() {
   const [msg, setMsg] = useState(null);
 
   const allSeoData = useSeoDataRealtime();
-  const seoEntries = Object.entries(allSeoData);
+  const seoEntries = useMemo(
+    () => Object.entries(allSeoData),
+    [allSeoData]
+  );
   const [chartLimit, setChartLimit] = useState(7);
   const [openCards, setOpenCards] = useState({});
-
-  useEffect(() => {
-    if (seoEntries.length === 0) return;
-    const latest = [...seoEntries]
-      .sort((a, b) => b[0].localeCompare(a[0]))[0][0];
-    setOpenCards({ [latest]: true });
-  }, [seoEntries]);
 
   const { gongChartOptions, sobangChartOptions } = useMemo(() => {
     if (seoEntries.length === 0) return { gongChartOptions: null, sobangChartOptions: null };
@@ -645,12 +641,14 @@ export default function Home() {
                       <p className={styles.savedDate}>{d}</p>
                       <div className={styles.headerButtons}>
                         <button
+                          type='button'
                           className={styles.deleteButton}
                           onClick={() => handleDelete(d)}
                         >
                           삭제
                         </button>
                         <button
+                          type='button'
                           className={styles.toggleButton}
                           onClick={() => toggleCard(d)}
                         >
