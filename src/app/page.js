@@ -647,7 +647,7 @@ export default function Home() {
 
       {/* 저장된 데이터 테이블 */}
       <div className={styles.savedData}>
-        <h3 className={styles.subTitle}>SEO 순위 데이터</h3>
+        <h3 className={styles.subTitle}>핵심키워드별 메가공 SEO 순위</h3>
         {seoEntries.length === 0 ? (
           <p>저장된 데이터가 없습니다.</p>
         ) : (
