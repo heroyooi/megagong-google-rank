@@ -1,0 +1,16 @@
+@mixin card {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+@mixin soft-border {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+
+@mixin focus-ring {
+  outline: none;
+  box-shadow: var(--ring);
+}

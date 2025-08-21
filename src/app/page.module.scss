@@ -1,0 +1,366 @@
+@use '@/styles/mixins' as m;
+
+/* ===== Page ===== */
+.container {
+  padding: 28px;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: var(--text);
+  background: linear-gradient(180deg, var(--bg) 0%, var(--bg-soft) 100%);
+
+  .title {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 3vw, 28px);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .notice {
+    color: var(--text-sub);
+    margin-top: 0;
+    font-size: 14px;
+  }
+
+  /* ===== Crawling Area ===== */
+  .keywordGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin: 20px 0;
+
+    @media (max-width: 920px) {
+      grid-template-columns: 1fr;
+    }
+
+    .keywordBox {
+      @include m.card;
+      padding: 18px;
+
+      .keywordHeader {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+
+        /* CSS Modules 순수 셀렉터 에러 방지 */
+        :global(h3) {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 700;
+          letter-spacing: -0.01em;
+        }
+
+        button {
+          appearance: none;
+          border: none;
+          @include m.soft-border;
+          background: linear-gradient(180deg, var(--primary-50), transparent);
+          color: var(--primary);
+          padding: 8px 14px;
+          font-weight: 600;
+          border-radius: 10px;
+          transition: transform 0.06s ease, background-color 0.2s ease,
+            opacity 0.2s ease;
+          cursor: pointer;
+
+          &:hover {
+            opacity: 0.9;
+          }
+          &:active {
+            transform: translateY(1px) scale(0.99);
+          }
+          &:focus-visible {
+            @include m.focus-ring;
+          }
+        }
+      }
+
+      .keywordList {
+        list-style: none;
+        padding: 0;
+        margin-top: 14px;
+
+        .keywordItem {
+          display: grid;
+          grid-template-columns: 28px 1fr 110px;
+          gap: 10px;
+          padding: 10px 8px;
+          border-bottom: 1px dashed var(--line);
+          align-items: center;
+
+          /* 첫 줄 상단 간격 보정 */
+          &:first-child {
+            padding-top: 6px;
+          }
+
+          /* 짝수줄 은은한 배경 */
+          &:nth-child(even) {
+            background: linear-gradient(
+              180deg,
+              transparent 0%,
+              rgba(0, 0, 0, 0.015) 100%
+            );
+            border-radius: 8px;
+          }
+
+          span:first-child {
+            color: var(--muted);
+            font-variant-numeric: tabular-nums;
+          }
+
+          .keywordRank {
+            text-align: right;
+            font-variant-numeric: tabular-nums;
+            font-weight: 600;
+
+            /* 상태 표시 */
+            &::before {
+              content: '';
+              display: inline-block;
+              width: 8px;
+              height: 8px;
+              border-radius: 50%;
+              background: var(--muted);
+              margin-right: 8px;
+              translate: 0 1px;
+            }
+
+            /* 텍스트 매칭 기반 색상(문자 그대로 매칭) */
+            &[data-state='loading'],
+            &:has(:where(:not(.x))) {
+              /* 안전 장치 */
+            }
+
+            /* ‘오류’ 텍스트를 포함하면 경고색 */
+            &:has(> :where(*) :where(.err)),
+            &:has(> .err),
+            &:where(*:not(.x)) {
+              /* noop to keep selector compatible */
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* ===== Form ===== */
+  .form {
+    @include m.card;
+    padding: 18px;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+
+    .formRow {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 12px;
+      align-items: center;
+
+      @media (max-width: 640px) {
+        grid-template-columns: 1fr;
+        align-items: start;
+      }
+
+      &.formRowAlignStart {
+        align-items: start;
+      }
+
+      label {
+        color: var(--text-sub);
+        font-weight: 600;
+      }
+    }
+
+    .input,
+    .textarea {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--panel);
+      color: var(--text);
+      transition: border-color 0.15s ease, box-shadow 0.15s ease,
+        background-color 0.2s ease;
+      max-width: 280px;
+
+      &:focus-visible {
+        border-color: var(--primary);
+        @include m.focus-ring;
+      }
+    }
+
+    .textarea {
+      max-width: none;
+      min-height: 120px;
+      line-height: 1.6;
+      resize: vertical;
+    }
+
+    .noteLabel {
+      margin-top: 6px;
+    }
+
+    .formActions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+
+      .saveButton {
+        padding: 10px 18px;
+        border-radius: 12px;
+        border: 1px solid transparent;
+        background: linear-gradient(180deg, var(--primary), var(--primary-600));
+        color: #fff;
+        font-weight: 700;
+        letter-spacing: 0.01em;
+        cursor: pointer;
+        transition: transform 0.06s ease, opacity 0.2s ease,
+          box-shadow 0.2s ease;
+
+        &:hover {
+          opacity: 0.95;
+          box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
+        }
+        &:active {
+          transform: translateY(1px) scale(0.99);
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+          opacity: 0.6;
+          filter: grayscale(0.1);
+          box-shadow: none;
+        }
+
+        &:focus-visible {
+          @include m.focus-ring;
+        }
+      }
+    }
+  }
+
+  .message {
+    margin: 0;
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  .warning {
+    margin: 0;
+    color: var(--warning);
+    font-weight: 600;
+  }
+
+  /* ===== Saved Data ===== */
+  .savedData {
+    margin-top: 26px;
+
+    .savedTitle {
+      margin-bottom: 14px;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .savedGrid {
+      display: grid;
+      gap: 18px;
+
+      .savedCard {
+        @include m.card;
+        padding: 18px;
+        display: grid;
+        gap: 14px;
+
+        .savedDate {
+          margin: 0;
+          font-weight: 800;
+          letter-spacing: 0.01em;
+          font-variant-numeric: tabular-nums;
+        }
+
+        .tablesGrid {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+
+          @media (max-width: 920px) {
+            grid-template-columns: 1fr;
+          }
+
+          .tableTitle {
+            margin: 6px 0 8px;
+            font-weight: 700;
+            color: var(--text-sub);
+          }
+
+          .dataTable {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--panel);
+
+            thead th {
+              text-align: left;
+              padding: 10px 12px;
+              border-bottom: 1px solid var(--border);
+              background: linear-gradient(180deg, var(--bg-soft), transparent);
+              font-weight: 700;
+
+              &:last-child {
+                text-align: right;
+              }
+            }
+
+            tbody tr {
+              transition: background-color 0.15s ease;
+
+              &:nth-child(even) {
+                background: linear-gradient(
+                  180deg,
+                  transparent,
+                  rgba(0, 0, 0, 0.02)
+                );
+              }
+
+              &:hover {
+                background: linear-gradient(
+                  180deg,
+                  rgba(0, 0, 0, 0.03),
+                  transparent
+                );
+              }
+            }
+
+            td {
+              padding: 10px 12px;
+              border-bottom: 1px solid var(--line);
+              font-variant-numeric: tabular-nums;
+
+              &:last-child {
+                text-align: right;
+              }
+            }
+
+            tbody tr:last-child td {
+              border-bottom: none;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  .note {
+    margin-top: 8px;
+    padding: 10px 12px;
+    @include m.soft-border;
+    background: linear-gradient(180deg, var(--bg-soft), transparent);
+    line-height: 1.7;
+    white-space: pre-wrap;
+  }
+}
+
+/* 모션 최소화 환경 고려 */

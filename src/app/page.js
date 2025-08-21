@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import styles from './page.module.css';
+import styles from './page.module.scss';
 
 // ===== Firebase (client) =====
 import { initializeApp, getApps } from 'firebase/app';
@@ -298,9 +298,7 @@ export default function Home() {
         {/* 공무원 */}
         <div className={styles.keywordBox}>
           <div className={styles.keywordHeader}>
-            <h3>
-              공무원 핵심 키워드({gongKeywords.length})
-            </h3>
+            <h3>공무원 핵심 키워드({gongKeywords.length})</h3>
             <button onClick={handleFetchGong}>순위 가져오기</button>
           </div>
           <ul className={styles.keywordList}>
@@ -323,9 +321,7 @@ export default function Home() {
         {/* 소방 */}
         <div className={styles.keywordBox}>
           <div className={styles.keywordHeader}>
-            <h3>
-              소방 핵심 키워드({sobangKeywords.length})
-            </h3>
+            <h3>소방 핵심 키워드({sobangKeywords.length})</h3>
             <button onClick={handleFetchSobang}>순위 가져오기</button>
           </div>
           <ul className={styles.keywordList}>
