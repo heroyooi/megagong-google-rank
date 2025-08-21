@@ -9,6 +9,7 @@ import {
   getFirestore,
   doc,
   setDoc,
+  deleteDoc,
   collection,
   onSnapshot,
   serverTimestamp,
@@ -186,6 +187,14 @@ async function logSeoData({ date, note, rankings }) {
   return true;
 }
 
+/** Firestore: 삭제 */
+async function deleteSeoData(date) {
+  if (!db) throw new Error('Firebase가 초기화되지 않았습니다.');
+  const ref = doc(db, 'seoRanks', date);
+  await deleteDoc(ref);
+  return true;
+}
+
 /** Firestore: 실시간 구독 */
 function useSeoDataRealtime() {
   const [data, setData] = useState({});
@@ -217,6 +226,16 @@ export default function Home() {
   const [msg, setMsg] = useState(null);
 
   const allSeoData = useSeoDataRealtime();
+
+  const handleDelete = async (targetDate) => {
+    if (!window.confirm(`${targetDate} 데이터를 삭제하시겠습니까?`)) return;
+    try {
+      await deleteSeoData(targetDate);
+      setMsg('삭제되었습니다.');
+    } catch (e) {
+      setMsg(`삭제 중 오류: ${e.message}`);
+    }
+  };
 
   // 초기 리스트 표시용
   useEffect(() => {
@@ -397,7 +416,15 @@ export default function Home() {
               const sobang = details?.rankings?.sobang ?? {};
               return (
                 <div key={d} className={styles.savedCard}>
-                  <p className={styles.savedDate}>{d}</p>
+                  <div className={styles.savedHeader}>
+                    <p className={styles.savedDate}>{d}</p>
+                    <button
+                      className={styles.deleteButton}
+                      onClick={() => handleDelete(d)}
+                    >
+                      삭제
+                    </button>
+                  </div>
                   <div className={styles.tablesGrid}>
                     {/* 공무원 테이블 */}
                     <div>

@@ -271,6 +271,32 @@
         display: grid;
         gap: 14px;
 
+        .savedHeader {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+
+          .deleteButton {
+            appearance: none;
+            border: none;
+            background: transparent;
+            color: var(--warning);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            transition: opacity 0.2s ease;
+
+            &:hover {
+              opacity: 0.8;
+            }
+
+            &:focus-visible {
+              @include m.focus-ring;
+            }
+          }
+        }
+
         .savedDate {
           margin: 0;
           font-weight: 800;
