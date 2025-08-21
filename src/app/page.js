@@ -1,7 +1,12 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
+import dynamic from 'next/dynamic';
 import styles from './page.module.scss';
+
+const ReactECharts = dynamic(() => import('echarts-for-react'), {
+  ssr: false,
+});
 
 // ===== Firebase (client) =====
 import { initializeApp, getApps } from 'firebase/app';
@@ -239,7 +244,8 @@ function renderChange(curr, prev) {
   )
     return null;
   const diff = p - c;
-  if (diff === 0) return null;
+  if (diff === 0)
+    return <span className={styles.rankChange}>(-0)</span>;
   const symbol = diff > 0 ? '▲' : '▼';
   const cls = diff > 0 ? styles.rankChangeUp : styles.rankChangeDown;
   return (
@@ -265,6 +271,52 @@ export default function Home() {
 
   const allSeoData = useSeoDataRealtime();
   const seoEntries = Object.entries(allSeoData);
+  const [chartLimit, setChartLimit] = useState(7);
+
+  const chartOptions = useMemo(() => {
+    if (seoEntries.length === 0) return null;
+    const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
+    const limited = sorted.slice(-chartLimit);
+    const dates = limited.map(([d]) => d);
+    const keywords = [...gongKeywords, ...sobangKeywords];
+    let maxRank = 1;
+    const rawSeries = keywords.map((kw) => {
+      const data = limited.map(([, details]) => {
+        const group = gongKeywords.includes(kw) ? 'gong' : 'sobang';
+        const r = details?.rankings?.[group]?.[kw];
+        const val = getRankValue(r);
+        const num = typeof val === 'number' ? val : null;
+        if (num !== null) maxRank = Math.max(maxRank, num);
+        return num;
+      });
+      return { name: kw, type: 'line', data };
+    });
+    const finalMax = maxRank + 1;
+    const series = rawSeries.map((s) => ({
+      ...s,
+      data: s.data.map((v) => (v == null ? finalMax : v)),
+    }));
+    const selected = {};
+    const defaults = [
+      '공무원',
+      '공무원시험',
+      '공무원인강추천',
+      '소방',
+      '소방공무원',
+      '소방경채',
+    ];
+    keywords.forEach((kw) => {
+      selected[kw] = defaults.includes(kw);
+    });
+    return {
+      tooltip: { trigger: 'axis' },
+      legend: { type: 'scroll', selected },
+      grid: { left: 40, right: 20, top: 40, bottom: 40 },
+      xAxis: { type: 'category', data: dates },
+      yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
+      series,
+    };
+  }, [seoEntries, chartLimit]);
 
   const handleDelete = async (targetDate) => {
     if (!window.confirm(`${targetDate} 데이터를 삭제하시겠습니까?`)) return;
@@ -497,15 +549,37 @@ export default function Home() {
         {seoEntries.length === 0 ? (
           <p>저장된 데이터가 없습니다.</p>
         ) : (
-          <div className={styles.savedGrid}>
-            {seoEntries.map(([d, details], idx) => {
-              const prevDetails = seoEntries[idx + 1]?.[1] || null;
-              const gong = details?.rankings?.gong ?? {};
-              const prevGong = prevDetails?.rankings?.gong ?? {};
-              const sobang = details?.rankings?.sobang ?? {};
-              const prevSobang = prevDetails?.rankings?.sobang ?? {};
-              return (
-                <div key={d} className={styles.savedCard}>
+          <>
+            {chartOptions && (
+              <div className={styles.chartSection}>
+                <div className={styles.chartControls}>
+                  <label>
+                    최근
+                    <select
+                      value={chartLimit}
+                      onChange={(e) => setChartLimit(Number(e.target.value))}
+                    >
+                      {[7, 30, 60].map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    건
+                  </label>
+                </div>
+                <ReactECharts className={styles.chart} option={chartOptions} />
+              </div>
+            )}
+            <div className={styles.savedGrid}>
+              {seoEntries.map(([d, details], idx) => {
+                const prevDetails = seoEntries[idx + 1]?.[1] || null;
+                const gong = details?.rankings?.gong ?? {};
+                const prevGong = prevDetails?.rankings?.gong ?? {};
+                const sobang = details?.rankings?.sobang ?? {};
+                const prevSobang = prevDetails?.rankings?.sobang ?? {};
+                return (
+                  <div key={d} className={styles.savedCard}>
                   <div className={styles.savedHeader}>
                     <p className={styles.savedDate}>{d}</p>
                     <button
@@ -621,8 +695,9 @@ export default function Home() {
                   </div>
                 </div>
               );
-            })}
-          </div>
+              })}
+            </div>
+          </>
         )}
       </div>
     </div>
