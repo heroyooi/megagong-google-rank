@@ -122,7 +122,11 @@ async function fetchRank(keyword) {
     });
     if (!res.ok) throw new Error('검색 실패');
     const data = await res.json();
-    return { keyword, rank: data.activeRank ?? 'N/A', source: data.sourceUrl || '' };
+    return {
+      keyword,
+      rank: data.activeRank ?? 'N/A',
+      source: data.sourceUrl || '',
+    };
   } catch {
     return { keyword, rank: '오류 발생', source: '' };
   }
@@ -281,12 +285,16 @@ export default function Home() {
     setMsg(null);
     const nextRank = { ...sobangState };
     const nextSrc = { ...sobangSource };
-    const result = await fetchSequentially(sobangKeywords, 5, (kw, val, src) => {
-      nextRank[kw] = val;
-      nextSrc[kw] = src;
-      setSobangState({ ...nextRank });
-      setSobangSource({ ...nextSrc });
-    });
+    const result = await fetchSequentially(
+      sobangKeywords,
+      5,
+      (kw, val, src) => {
+        nextRank[kw] = val;
+        nextSrc[kw] = src;
+        setSobangState({ ...nextRank });
+        setSobangSource({ ...nextSrc });
+      }
+    );
     setSobangState((prev) => ({ ...prev, ...result.ranks }));
     setSobangSource((prev) => ({ ...prev, ...result.sources }));
     setIsSobangDone(true);
@@ -334,7 +342,7 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>구글 검색 순위 비교(SEO)</h1>
-      <p className={styles.notice}>금요일만 저장 가능합니다.</p>
+      <p className={styles.notice}>매주 금요일만 저장 가능합니다.</p>
 
       {/* 크롤링 영역 */}
       <div className={styles.keywordGrid}>
@@ -350,17 +358,19 @@ export default function Home() {
                 <span>{idx + 1}</span>
                 <span>{kw}</span>
                 <span className={styles.keywordRank}>
-                  {gongState[kw] === 'loading'
-                    ? '로드중'
-                    : gongState[kw] === null
-                    ? '집계전'
-                    : rankText(gongState[kw])}
+                  <em>
+                    {gongState[kw] === 'loading'
+                      ? '로드중'
+                      : gongState[kw] === null
+                      ? '집계전'
+                      : rankText(gongState[kw])}
+                  </em>
                   {gongSource[kw] && gongState[kw] !== 'loading' && (
                     <a
                       className={styles.keywordSource}
                       href={gongSource[kw]}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target='_blank'
+                      rel='noopener noreferrer'
                     >
                       {gongSource[kw].replace(/^https?:\/\//, '')}
                     </a>
@@ -383,17 +393,19 @@ export default function Home() {
                 <span>{idx + 1}</span>
                 <span>{kw}</span>
                 <span className={styles.keywordRank}>
-                  {sobangState[kw] === 'loading'
-                    ? '로드중'
-                    : sobangState[kw] === null
-                    ? '집계전'
-                    : rankText(sobangState[kw])}
+                  <em>
+                    {sobangState[kw] === 'loading'
+                      ? '로드중'
+                      : sobangState[kw] === null
+                      ? '집계전'
+                      : rankText(sobangState[kw])}
+                  </em>
                   {sobangSource[kw] && sobangState[kw] !== 'loading' && (
                     <a
                       className={styles.keywordSource}
                       href={sobangSource[kw]}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      target='_blank'
+                      rel='noopener noreferrer'
                     >
                       {sobangSource[kw].replace(/^https?:\/\//, '')}
                     </a>
@@ -474,6 +486,10 @@ export default function Home() {
                     <div>
                       <h4 className={styles.tableTitle}>공무원</h4>
                       <table className={styles.dataTable}>
+                        <colgroup>
+                          <col width='45%' />
+                          <col width='*' />
+                        </colgroup>
                         <thead>
                           <tr>
                             <th>핵심키워드</th>
@@ -498,10 +514,10 @@ export default function Home() {
                                     <a
                                       className={styles.tableSource}
                                       href={src}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                      target='_blank'
+                                      rel='noopener noreferrer'
                                     >
-                                      ({src.replace(/^https?:\/\//, '')})
+                                      {src.replace(/^https?:\/\//, '')}
                                     </a>
                                   )}
                                 </td>
@@ -516,6 +532,10 @@ export default function Home() {
                     <div>
                       <h4 className={styles.tableTitle}>소방</h4>
                       <table className={styles.dataTable}>
+                        <colgroup>
+                          <col width='45%' />
+                          <col width='*' />
+                        </colgroup>
                         <thead>
                           <tr>
                             <th>핵심키워드</th>
@@ -540,10 +560,10 @@ export default function Home() {
                                     <a
                                       className={styles.tableSource}
                                       href={src}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
+                                      target='_blank'
+                                      rel='noopener noreferrer'
                                     >
-                                      ({src.replace(/^https?:\/\//, '')})
+                                      {src.replace(/^https?:\/\//, '')}
                                     </a>
                                   )}
                                 </td>
