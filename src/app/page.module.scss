@@ -401,6 +401,18 @@
               color: var(--text-sub);
               text-decoration: none;
             }
+
+            .rankChangeUp {
+              margin-left: 6px;
+              color: var(--warning);
+              font-weight: 600;
+            }
+
+            .rankChangeDown {
+              margin-left: 6px;
+              color: var(--primary);
+              font-weight: 600;
+            }
           }
         }
       }

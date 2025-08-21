@@ -220,6 +220,31 @@ function useSeoDataRealtime() {
   return data;
 }
 
+function getRankValue(r) {
+  return typeof r === 'object' ? r?.rank : r;
+}
+
+function renderChange(curr, prev) {
+  const c = getRankValue(curr);
+  const p = getRankValue(prev);
+  if (
+    c === null ||
+    p === null ||
+    c === undefined ||
+    p === undefined ||
+    c === 'loading' ||
+    p === 'loading' ||
+    typeof c !== 'number' ||
+    typeof p !== 'number'
+  )
+    return null;
+  const diff = p - c;
+  if (diff === 0) return null;
+  const symbol = diff > 0 ? '▲' : '▼';
+  const cls = diff > 0 ? styles.rankChangeUp : styles.rankChangeDown;
+  return <span className={cls}>{`${symbol}${Math.abs(diff)}`}</span>;
+}
+
 // ====== UI ======
 export default function Home() {
   // 입력/상태
@@ -235,6 +260,7 @@ export default function Home() {
   const [msg, setMsg] = useState(null);
 
   const allSeoData = useSeoDataRealtime();
+  const seoEntries = Object.entries(allSeoData);
 
   const handleDelete = async (targetDate) => {
     if (!window.confirm(`${targetDate} 데이터를 삭제하시겠습니까?`)) return;
@@ -464,13 +490,16 @@ export default function Home() {
       {/* 저장된 데이터 테이블 */}
       <div className={styles.savedData}>
         <h3 className={styles.subTitle}>SEO 순위 데이터</h3>
-        {Object.keys(allSeoData).length === 0 ? (
+        {seoEntries.length === 0 ? (
           <p>저장된 데이터가 없습니다.</p>
         ) : (
           <div className={styles.savedGrid}>
-            {Object.entries(allSeoData).map(([d, details]) => {
+            {seoEntries.map(([d, details], idx) => {
+              const prevDetails = idx === 0 ? seoEntries[1]?.[1] : null;
               const gong = details?.rankings?.gong ?? {};
+              const prevGong = prevDetails?.rankings?.gong ?? {};
               const sobang = details?.rankings?.sobang ?? {};
+              const prevSobang = prevDetails?.rankings?.sobang ?? {};
               return (
                 <div key={d} className={styles.savedCard}>
                   <div className={styles.savedHeader}>
@@ -499,9 +528,10 @@ export default function Home() {
                         </thead>
                         <tbody>
                           {Object.entries(gong).map(([kw, r]) => {
-                            const value = typeof r === 'object' ? r.rank : r;
+                            const value = getRankValue(r);
                             const src =
                               typeof r === 'object' && r.source ? r.source : '';
+                            const prevValue = prevGong[kw];
                             return (
                               <tr key={kw}>
                                 <td>{kw}</td>
@@ -511,6 +541,7 @@ export default function Home() {
                                     : value === null
                                     ? '집계전'
                                     : value}
+                                  {prevDetails && renderChange(value, prevValue)}
                                   {src && (
                                     <a
                                       className={styles.tableSource}
@@ -545,9 +576,10 @@ export default function Home() {
                         </thead>
                         <tbody>
                           {Object.entries(sobang).map(([kw, r]) => {
-                            const value = typeof r === 'object' ? r.rank : r;
+                            const value = getRankValue(r);
                             const src =
                               typeof r === 'object' && r.source ? r.source : '';
+                            const prevValue = prevSobang[kw];
                             return (
                               <tr key={kw}>
                                 <td>{kw}</td>
@@ -557,6 +589,7 @@ export default function Home() {
                                     : value === null
                                     ? '집계전'
                                     : value}
+                                  {prevDetails && renderChange(value, prevValue)}
                                   {src && (
                                     <a
                                       className={styles.tableSource}
