@@ -231,7 +231,6 @@ export default function Home() {
   const allSeoData = useSeoDataRealtime();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
-  const [chartType, setChartType] = useState('donut');
   const [openCards, setOpenCards] = useState({});
   const [modalKeyword, setModalKeyword] = useState(null);
   const [modalGroup, setModalGroup] = useState(null);
@@ -270,19 +269,9 @@ export default function Home() {
     };
   }, []);
 
-  const {
-    gongChartOptions,
-    sobangChartOptions,
-    gongDonutOptions,
-    sobangDonutOptions,
-  } = useMemo(() => {
+  const { gongChartOptions, sobangChartOptions } = useMemo(() => {
     if (seoEntries.length === 0)
-      return {
-        gongChartOptions: null,
-        sobangChartOptions: null,
-        gongDonutOptions: null,
-        sobangDonutOptions: null,
-      };
+      return { gongChartOptions: null, sobangChartOptions: null };
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
@@ -320,52 +309,9 @@ export default function Home() {
       };
     };
 
-    const buildDonutOptions = (keywords, group) => {
-      let maxRank = 1;
-      const values = {};
-      keywords.forEach((kw) => {
-        const data = limited.map(([, details]) => {
-          const r = details?.rankings?.[group]?.[kw];
-          const val = getRankValue(r);
-          const num = typeof val === 'number' ? val : null;
-          if (num !== null) maxRank = Math.max(maxRank, num);
-          return num;
-        });
-        values[kw] = data;
-      });
-      const finalMax = maxRank + 1;
-      const data = keywords.map((kw) => {
-        const arr = values[kw].map((v) => (v == null ? finalMax : v));
-        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
-        const score = finalMax - avg + 1;
-        return { name: kw, value: score };
-      });
-      const colorMap = group === 'gong' ? gongColors : sobangColors;
-      const color = keywords.map((kw) => colorMap[kw] || '#000000');
-      return {
-        tooltip: {
-          trigger: 'item',
-          formatter: ({ name, value, percent }) =>
-            `${name}: ${Number(value).toFixed(2)} (${percent.toFixed(2)}%)`,
-        },
-        legend: { type: 'scroll' },
-        series: [
-          {
-            name: '평균 순위',
-            type: 'pie',
-            radius: ['40%', '70%'],
-            data,
-          },
-        ],
-        color,
-      };
-    };
-
     return {
       gongChartOptions: buildLineOptions(gongKeywords, 'gong'),
       sobangChartOptions: buildLineOptions(sobangKeywords, 'sobang'),
-      gongDonutOptions: buildDonutOptions(gongKeywords, 'gong'),
-      sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
   }, [seoEntries, chartLimit, gongKeywords, sobangKeywords, gongColors, sobangColors]);
 
@@ -571,7 +517,7 @@ export default function Home() {
               return (
                 <li key={kw} className={styles.keywordItem}>
                   <span>{idx + 1}</span>
-                  <span>{kw}</span>
+                  <span style={{ color: gongColors[kw] || '#000000' }}>{kw}</span>
                   <span className={styles.keywordRank}>
                     <em>{info.primary}</em>
                     {info.detail && (
@@ -616,7 +562,7 @@ export default function Home() {
               return (
                 <li key={kw} className={styles.keywordItem}>
                   <span>{idx + 1}</span>
-                  <span>{kw}</span>
+                  <span style={{ color: sobangColors[kw] || '#000000' }}>{kw}</span>
                   <span className={styles.keywordRank}>
                     <em>{info.primary}</em>
                     {info.detail && (
@@ -709,64 +655,25 @@ export default function Home() {
                     </select>
                     건
                   </label>
-                  <div className={styles.chartTabs}>
-                    <button
-                      className={`${styles.chartTab} ${chartType === 'donut' ? styles.chartTabActive : ''}`}
-                      onClick={() => setChartType('donut')}
-                    >
-                      도넛차트
-                    </button>
-                    <button
-                      className={`${styles.chartTab} ${chartType === 'line' ? styles.chartTabActive : ''}`}
-                      onClick={() => setChartType('line')}
-                    >
-                      라인차트
-                    </button>
-                  </div>
                 </div>
-                {chartType === 'donut' ? (
-                  <>
-                    <div className={styles.chartGroup}>
-                      <h5 className={styles.chartTitle}>공무원</h5>
-                      <ReactECharts
-                        key='gong-donut'
-                        className={styles.chart}
-                        option={gongDonutOptions}
-                        notMerge
-                      />
-                    </div>
-                    <div className={styles.chartGroup}>
-                      <h5 className={styles.chartTitle}>소방</h5>
-                      <ReactECharts
-                        key='sobang-donut'
-                        className={styles.chart}
-                        option={sobangDonutOptions}
-                        notMerge
-                      />
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <div className={styles.chartGroup}>
-                      <h5 className={styles.chartTitle}>공무원</h5>
-                      <ReactECharts
-                        key='gong-line'
-                        className={styles.chart}
-                        option={gongChartOptions}
-                        notMerge
-                      />
-                    </div>
-                    <div className={styles.chartGroup}>
-                      <h5 className={styles.chartTitle}>소방</h5>
-                      <ReactECharts
-                        key='sobang-line'
-                        className={styles.chart}
-                        option={sobangChartOptions}
-                        notMerge
-                      />
-                    </div>
-                  </>
-                )}
+                <div className={styles.chartGroup}>
+                  <h5 className={styles.chartTitle}>공무원</h5>
+                  <ReactECharts
+                    key='gong-line'
+                    className={styles.chart}
+                    option={gongChartOptions}
+                    notMerge
+                  />
+                </div>
+                <div className={styles.chartGroup}>
+                  <h5 className={styles.chartTitle}>소방</h5>
+                  <ReactECharts
+                    key='sobang-line'
+                    className={styles.chart}
+                    option={sobangChartOptions}
+                    notMerge
+                  />
+                </div>
               </div>
             )}
             <div className={styles.savedGrid}>
@@ -837,6 +744,7 @@ export default function Home() {
                                           type='button'
                                           className={styles.keywordButton}
                                           onClick={() => openModal(kw, 'gong')}
+                                          style={{ color: gongColors[kw] || '#000000' }}
                                         >
                                           {kw}
                                         </button>
@@ -906,6 +814,7 @@ export default function Home() {
                                           type='button'
                                           className={styles.keywordButton}
                                           onClick={() => openModal(kw, 'sobang')}
+                                          style={{ color: sobangColors[kw] || '#000000' }}
                                         >
                                           {kw}
                                         </button>
