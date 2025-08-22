@@ -283,11 +283,22 @@ export default function Home() {
   const allSeoData = useSeoDataRealtime();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
+  const [chartType, setChartType] = useState('donut');
   const [openCards, setOpenCards] = useState({});
 
-  const { gongChartOptions, sobangChartOptions } = useMemo(() => {
+  const {
+    gongChartOptions,
+    sobangChartOptions,
+    gongDonutOptions,
+    sobangDonutOptions,
+  } = useMemo(() => {
     if (seoEntries.length === 0)
-      return { gongChartOptions: null, sobangChartOptions: null };
+      return {
+        gongChartOptions: null,
+        sobangChartOptions: null,
+        gongDonutOptions: null,
+        sobangDonutOptions: null,
+      };
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
@@ -326,7 +337,7 @@ export default function Home() {
       '#c2185b',
     ];
 
-    const buildOptions = (keywords, group) => {
+    const buildLineOptions = (keywords, group) => {
       let maxRank = 1;
       const rawSeries = keywords.map((kw) => {
         const data = limited.map(([, details]) => {
@@ -359,9 +370,47 @@ export default function Home() {
       };
     };
 
+    const buildDonutOptions = (keywords, group) => {
+      let maxRank = 1;
+      const values = {};
+      keywords.forEach((kw) => {
+        const data = limited.map(([, details]) => {
+          const r = details?.rankings?.[group]?.[kw];
+          const val = getRankValue(r);
+          const num = typeof val === 'number' ? val : null;
+          if (num !== null) maxRank = Math.max(maxRank, num);
+          return num;
+        });
+        values[kw] = data;
+      });
+      const finalMax = maxRank + 1;
+      const data = keywords.map((kw) => {
+        const arr = values[kw].map((v) => (v == null ? finalMax : v));
+        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+        const score = finalMax - avg + 1;
+        return { name: kw, value: score };
+      });
+      const color = group === 'gong' ? gongColors : sobangColors;
+      return {
+        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+        legend: { type: 'scroll' },
+        series: [
+          {
+            name: '평균 순위',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            data,
+          },
+        ],
+        color,
+      };
+    };
+
     return {
-      gongChartOptions: buildOptions(gongKeywords, 'gong'),
-      sobangChartOptions: buildOptions(sobangKeywords, 'sobang'),
+      gongChartOptions: buildLineOptions(gongKeywords, 'gong'),
+      sobangChartOptions: buildLineOptions(sobangKeywords, 'sobang'),
+      gongDonutOptions: buildDonutOptions(gongKeywords, 'gong'),
+      sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
   }, [seoEntries, chartLimit]);
 
@@ -661,7 +710,7 @@ export default function Home() {
                       value={chartLimit}
                       onChange={(e) => setChartLimit(Number(e.target.value))}
                     >
-                      {[7, 30, 60].map((n) => (
+                      {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
                         <option key={n} value={n}>
                           {n}
                         </option>
@@ -669,21 +718,64 @@ export default function Home() {
                     </select>
                     건
                   </label>
+                  <div className={styles.chartTabs}>
+                    <button
+                      className={`${styles.chartTab} ${chartType === 'donut' ? styles.chartTabActive : ''}`}
+                      onClick={() => setChartType('donut')}
+                    >
+                      도넛차트
+                    </button>
+                    <button
+                      className={`${styles.chartTab} ${chartType === 'line' ? styles.chartTabActive : ''}`}
+                      onClick={() => setChartType('line')}
+                    >
+                      라인차트
+                    </button>
+                  </div>
                 </div>
-                <div className={styles.chartGroup}>
-                  <h4 className={styles.chartTitle}>공무원</h4>
-                  <ReactECharts
-                    className={styles.chart}
-                    option={gongChartOptions}
-                  />
-                </div>
-                <div className={styles.chartGroup}>
-                  <h4 className={styles.chartTitle}>소방</h4>
-                  <ReactECharts
-                    className={styles.chart}
-                    option={sobangChartOptions}
-                  />
-                </div>
+                {chartType === 'donut' ? (
+                  <>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>공무원</h5>
+                      <ReactECharts
+                        key='gong-donut'
+                        className={styles.chart}
+                        option={gongDonutOptions}
+                        notMerge
+                      />
+                    </div>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>소방</h5>
+                      <ReactECharts
+                        key='sobang-donut'
+                        className={styles.chart}
+                        option={sobangDonutOptions}
+                        notMerge
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>공무원</h5>
+                      <ReactECharts
+                        key='gong-line'
+                        className={styles.chart}
+                        option={gongChartOptions}
+                        notMerge
+                      />
+                    </div>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>소방</h5>
+                      <ReactECharts
+                        key='sobang-line'
+                        className={styles.chart}
+                        option={sobangChartOptions}
+                        notMerge
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             )}
             <div className={styles.savedGrid}>
