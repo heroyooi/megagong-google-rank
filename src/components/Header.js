@@ -25,11 +25,13 @@ export default function Header() {
   return (
     <header>
       <div className={styles.header_inner}>
-        {theme === 'light' ? (
-          <img src='/images/logo_blk.png' alt='Nextstudy logo' />
-        ) : (
-          <img src='/images/logo.png' alt='Nextstudy logo' />
-        )}
+        <Link href='/'>
+          {theme === 'light' ? (
+            <img src='/images/logo_blk.png' alt='Nextstudy logo' />
+          ) : (
+            <img src='/images/logo.png' alt='Nextstudy logo' />
+          )}
+        </Link>
         <div className={styles.controls}>
           <Link href='/keywords' className={styles.managerLink}>
             키워드 관리자
