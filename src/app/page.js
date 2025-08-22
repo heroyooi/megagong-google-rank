@@ -9,9 +9,7 @@ const ReactECharts = dynamic(() => import('echarts-for-react'), {
 });
 
 // ===== Firebase (client) =====
-import { initializeApp, getApps } from 'firebase/app';
 import {
-  getFirestore,
   doc,
   setDoc,
   deleteDoc,
@@ -21,61 +19,9 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
+import { db } from '@/firebaseClient';
 
-// --- Firebase init (same-file to keep single-file requirement) ---
-const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
-  authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-};
-
-let db = null;
-if (typeof window !== 'undefined') {
-  if (!getApps().length) {
-    initializeApp(firebaseConfig);
-  }
-  db = getFirestore();
-}
-
-// ====== Keywords (원본 유지) ======
-const gongKeywords = [
-  '공무원',
-  '공무원시험',
-  '공무원인강추천',
-  '공무원종류',
-  '9급공무원',
-  '9급공무원시험',
-  '7급공무원',
-  '7급공무원시험',
-  '공무원국어',
-  '9급공무원국어',
-  '공무원영어',
-  '9급공무원영어',
-  '공무원행정법',
-  '7급헌법',
-];
-
-const sobangKeywords = [
-  '소방',
-  '소방공무원',
-  '소방경채',
-  '소방공무원경채',
-  '소방가산점',
-  '소방관시험',
-  '소방직공무원',
-  '소방특채',
-  '소방공무원시험과목',
-  '소방공무원경쟁률',
-  '소방공채',
-  '소방공무원가산점',
-  '소방체력',
-  '소방관계법규',
-  '소방행정법',
-  '응급처치학',
-];
+// ====== Keywords ======
 
 const gongColors = [
   '#0d47a1',
@@ -305,6 +251,8 @@ export default function Home() {
   // 입력/상태
   const [date, setDate] = useState(getFridayOfWeek());
   const [note, setNote] = useState('');
+  const [gongKeywords, setGongKeywords] = useState([]);
+  const [sobangKeywords, setSobangKeywords] = useState([]);
   const [gongState, setGongState] = useState({}); // {keyword: rank|'loading'|undefined}
   const [sobangState, setSobangState] = useState({});
   const [gongSource, setGongSource] = useState({});
@@ -323,6 +271,20 @@ export default function Home() {
   const [openCards, setOpenCards] = useState({});
   const [modalKeyword, setModalKeyword] = useState(null);
   const [modalGroup, setModalGroup] = useState(null);
+
+  useEffect(() => {
+    if (!db) return;
+    const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), (snap) => {
+      setGongKeywords(snap.data()?.list || []);
+    });
+    const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), (snap) => {
+      setSobangKeywords(snap.data()?.list || []);
+    });
+    return () => {
+      unsubG();
+      unsubS();
+    };
+  }, []);
 
   const {
     gongChartOptions,
@@ -419,7 +381,7 @@ export default function Home() {
       gongDonutOptions: buildDonutOptions(gongKeywords, 'gong'),
       sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
-  }, [seoEntries, chartLimit]);
+  }, [seoEntries, chartLimit, gongKeywords, sobangKeywords]);
 
   const modalChartOptions = useMemo(() => {
     if (!modalKeyword || !modalGroup) return null;
@@ -446,7 +408,7 @@ export default function Home() {
       series: [{ name: modalKeyword, type: 'line', data: seriesData }],
       color: [color],
     };
-  }, [modalKeyword, modalGroup, seoEntries]);
+  }, [modalKeyword, modalGroup, seoEntries, gongKeywords, sobangKeywords]);
 
   const openModal = (kw, group) => {
     setModalKeyword(kw);
@@ -492,7 +454,7 @@ export default function Home() {
     const initSc = {};
     sobangKeywords.forEach((k) => (initSc[k] = 0));
     setSobangCount(initSc);
-  }, []);
+  }, [gongKeywords, sobangKeywords]);
 
   useEffect(() => {
     if (seoEntries.length > 0) {

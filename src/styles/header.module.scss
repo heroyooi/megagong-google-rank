@@ -13,3 +13,15 @@
     padding: 0 14px;
   }
 }
+
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+
+  .managerLink {
+    text-decoration: none;
+    color: var(--text);
+    font-weight: 600;
+  }
+}

@@ -1,0 +1,54 @@
+@use '@/styles/mixins' as m;
+
+.container {
+  max-width: 800px;
+  margin: 20px auto;
+  padding: 20px;
+  color: var(--text);
+}
+
+.group {
+  margin-top: 32px;
+}
+
+.groupTitle {
+  margin: 0 0 12px;
+  font-weight: 700;
+}
+
+.list {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+
+  input {
+    flex: 1;
+    padding: 6px;
+    border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  button {
+    padding: 6px 12px;
+  }
+}
+
+.backLink {
+  display: inline-block;
+  margin-top: 20px;
+  color: var(--primary);
+  text-decoration: none;
+}
