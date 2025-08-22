@@ -24,24 +24,25 @@ import { db } from '@/firebaseClient';
 // ====== Utils ======
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
-/** 이번 주 금요일(한국시간 기준) 반환 */
-function getFridayOfWeek(base = new Date()) {
-  // 브라우저 로컬 시간이 KST이면 그대로 사용
+/** 오늘 날짜(한국시간 기준) 반환 */
+function getToday(base = new Date()) {
   const date = new Date(base);
-  const day = date.getDay(); // 0=Sun ... 5=Fri
-  const diff = 5 - day;
-  date.setDate(date.getDate() + diff);
-  // yyyy-mm-dd 형태로 변환
   const yyyy = date.getFullYear();
   const mm = String(date.getMonth() + 1).padStart(2, '0');
   const dd = String(date.getDate()).padStart(2, '0');
   return `${yyyy}-${mm}-${dd}`;
 }
 
-/** yyyy-mm-dd가 금요일인지 검사 */
-function isFriday(yyyyMMdd) {
-  const d = new Date(yyyyMMdd);
-  return d.getDay() === 5;
+function getThemeVars() {
+  if (typeof window === 'undefined') {
+    return { text: '#000000', line: '#e5e7eb', panel: '#ffffff' };
+  }
+  const styles = getComputedStyle(document.documentElement);
+  return {
+    text: styles.getPropertyValue('--text').trim() || '#000000',
+    line: styles.getPropertyValue('--line').trim() || '#e5e7eb',
+    panel: styles.getPropertyValue('--panel').trim() || '#ffffff',
+  };
 }
 
 /** 비고 줄바꿈 처리 */
@@ -137,7 +138,6 @@ async function fetchSequentially(
 /** Firestore: 저장 */
 async function logSeoData({ date, note, rankings }) {
   if (!db) throw new Error('Firebase가 초기화되지 않았습니다.');
-  if (!isFriday(date)) throw new Error('금요일만 저장할 수 있습니다.');
   const ref = doc(db, 'seoRanks', date); // 날짜를 문서 ID로
   await setDoc(
     ref,
@@ -211,7 +211,7 @@ function renderChange(curr, prev) {
 // ====== UI ======
 export default function Home() {
   // 입력/상태
-  const [date, setDate] = useState(getFridayOfWeek());
+  const [date, setDate] = useState(getToday());
   const [note, setNote] = useState('');
   const [gongKeywords, setGongKeywords] = useState([]);
   const [sobangKeywords, setSobangKeywords] = useState([]);
@@ -227,6 +227,23 @@ export default function Home() {
   const [isSobangDone, setIsSobangDone] = useState(false);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
+  const [theme, setTheme] = useState('light');
+
+  useEffect(() => {
+    const current =
+      document.documentElement.getAttribute('data-theme') || 'light';
+    setTheme(current);
+    const observer = new MutationObserver(() => {
+      const t =
+        document.documentElement.getAttribute('data-theme') || 'light';
+      setTheme(t);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
 
   const allSeoData = useSeoDataRealtime();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
@@ -272,6 +289,8 @@ export default function Home() {
   const { gongChartOptions, sobangChartOptions } = useMemo(() => {
     if (seoEntries.length === 0)
       return { gongChartOptions: null, sobangChartOptions: null };
+    const { text: textColor, line: lineColor, panel: panelColor } =
+      getThemeVars();
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
@@ -299,13 +318,33 @@ export default function Home() {
       const colorMap = group === 'gong' ? gongColors : sobangColors;
       const color = keywords.map((kw) => colorMap[kw] || '#000000');
       return {
-        tooltip: { trigger: 'axis' },
-        legend: { type: 'scroll', selected },
+        tooltip: {
+          trigger: 'axis',
+          backgroundColor: panelColor,
+          borderColor: lineColor,
+          textStyle: { color: textColor },
+        },
+        legend: { type: 'scroll', selected, textStyle: { color: textColor } },
         grid: { left: 40, right: 20, top: 40, bottom: 40 },
-        xAxis: { type: 'category', data: dates },
-        yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
+        xAxis: {
+          type: 'category',
+          data: dates,
+          axisLabel: { color: textColor },
+          axisLine: { lineStyle: { color: lineColor } },
+          axisTick: { lineStyle: { color: lineColor } },
+        },
+        yAxis: {
+          type: 'value',
+          inverse: true,
+          min: 1,
+          max: finalMax,
+          axisLabel: { color: textColor },
+          axisLine: { lineStyle: { color: lineColor } },
+          splitLine: { lineStyle: { color: lineColor } },
+        },
         series,
         color,
+        textStyle: { color: textColor },
       };
     };
 
@@ -313,10 +352,11 @@ export default function Home() {
       gongChartOptions: buildLineOptions(gongKeywords, 'gong'),
       sobangChartOptions: buildLineOptions(sobangKeywords, 'sobang'),
     };
-  }, [seoEntries, chartLimit, gongKeywords, sobangKeywords, gongColors, sobangColors]);
+  }, [seoEntries, chartLimit, gongKeywords, sobangKeywords, gongColors, sobangColors, theme]);
 
   const modalChartOptions = useMemo(() => {
     if (!modalKeyword || !modalGroup) return null;
+    const { text: textColor, line: lineColor, panel: panelColor } = getThemeVars();
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const dates = sorted.map(([d]) => d);
     let maxRank = 1;
@@ -332,14 +372,34 @@ export default function Home() {
     const colorMap = modalGroup === 'gong' ? gongColors : sobangColors;
     const color = colorMap[modalKeyword] || '#000000';
     return {
-      tooltip: { trigger: 'axis' },
+      tooltip: {
+        trigger: 'axis',
+        backgroundColor: panelColor,
+        borderColor: lineColor,
+        textStyle: { color: textColor },
+      },
       grid: { left: 40, right: 20, top: 40, bottom: 40 },
-      xAxis: { type: 'category', data: dates },
-      yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
+      xAxis: {
+        type: 'category',
+        data: dates,
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: lineColor } },
+        axisTick: { lineStyle: { color: lineColor } },
+      },
+      yAxis: {
+        type: 'value',
+        inverse: true,
+        min: 1,
+        max: finalMax,
+        axisLabel: { color: textColor },
+        axisLine: { lineStyle: { color: lineColor } },
+        splitLine: { lineStyle: { color: lineColor } },
+      },
       series: [{ name: modalKeyword, type: 'line', data: seriesData }],
       color: [color],
+      textStyle: { color: textColor },
     };
-  }, [modalKeyword, modalGroup, seoEntries, gongKeywords, sobangKeywords, gongColors, sobangColors]);
+  }, [modalKeyword, modalGroup, seoEntries, gongColors, sobangColors, theme]);
 
   const openModal = (kw, group) => {
     setModalKeyword(kw);
@@ -446,18 +506,18 @@ export default function Home() {
   };
 
   const canSave = useMemo(() => {
-    // 두 그룹 모두 완료 + 금요일 + 최소 하나라도 값 있음
+    // 두 그룹 모두 완료 + 최소 하나라도 값 있음
     const hasGong = Object.values(gongState).some((v) => v && v !== 'loading');
     const hasSobang = Object.values(sobangState).some(
       (v) => v && v !== 'loading'
     );
-    return isGongDone && isSobangDone && isFriday(date) && hasGong && hasSobang;
-  }, [isGongDone, isSobangDone, date, gongState, sobangState]);
+    return isGongDone && isSobangDone && hasGong && hasSobang;
+  }, [isGongDone, isSobangDone, gongState, sobangState]);
 
   const handleSave = async () => {
     if (!canSave) {
       setMsg(
-        '공무원/소방 순위를 먼저 모두 가져오고(완료), 금요일 날짜로 선택 후 저장하세요.'
+        '공무원/소방 순위를 먼저 모두 가져오고(완료), 날짜를 선택해 저장하세요.'
       );
       return;
     }
@@ -493,7 +553,7 @@ export default function Home() {
         NS <span>(Next SEO Master)</span>
       </h1>
       <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
-      <p className={styles.notice}>매주 금요일만 저장 가능합니다.</p>
+      <p className={styles.notice}>원하는 날짜를 선택해 저장하세요.</p>
 
       {/* 크롤링 영역 */}
       <div className={styles.keywordGrid}>
@@ -591,7 +651,7 @@ export default function Home() {
       {/* 입력/저장 영역 */}
       <div className={styles.form}>
         <div className={styles.formRow}>
-          <label htmlFor='seo_date'>날짜(금요일)</label>
+          <label htmlFor='seo_date'>날짜</label>
           <input
             id='seo_date'
             type='date'
@@ -626,9 +686,6 @@ export default function Home() {
         </div>
 
         {msg && <p className={styles.message}>{msg}</p>}
-        {!isFriday(date) && (
-          <p className={styles.warning}>※ 금요일만 저장할 수 있습니다.</p>
-        )}
       </div>
 
       {/* 저장된 데이터 테이블 */}
