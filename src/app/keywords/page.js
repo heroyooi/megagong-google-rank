@@ -17,11 +17,29 @@ export default function KeywordManager() {
 
   useEffect(() => {
     if (!db) return;
-    const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), (snap) => {
-      setGong(snap.data()?.list || []);
+    const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), async (snap) => {
+      const list = snap.data()?.list || [];
+      const mapped = list.map((item) =>
+        typeof item === 'string'
+          ? { keyword: item, color: '#000000' }
+          : item,
+      );
+      setGong(mapped);
+      if (list.some((item) => typeof item === 'string')) {
+        await setDoc(doc(db, 'keywords', 'gong'), { list: mapped });
+      }
     });
-    const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), (snap) => {
-      setSobang(snap.data()?.list || []);
+    const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), async (snap) => {
+      const list = snap.data()?.list || [];
+      const mapped = list.map((item) =>
+        typeof item === 'string'
+          ? { keyword: item, color: '#000000' }
+          : item,
+      );
+      setSobang(mapped);
+      if (list.some((item) => typeof item === 'string')) {
+        await setDoc(doc(db, 'keywords', 'sobang'), { list: mapped });
+      }
     });
     return () => {
       unsubG();
@@ -58,7 +76,11 @@ export default function KeywordManager() {
 
   const changeColor = async (group, index, color) => {
     const arr = group === 'gong' ? [...gong] : [...sobang];
-    arr[index] = { ...arr[index], color };
+    const item = arr[index];
+    arr[index] =
+      typeof item === 'string'
+        ? { keyword: item, color }
+        : { ...item, color };
     if (group === 'gong') setGong(arr);
     else setSobang(arr);
     await update(group, arr);

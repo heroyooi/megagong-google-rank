@@ -239,7 +239,11 @@ export default function Home() {
   useEffect(() => {
     if (!db) return;
     const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), (snap) => {
-      const list = snap.data()?.list || [];
+      const list = (snap.data()?.list || []).map((item) =>
+        typeof item === 'string'
+          ? { keyword: item, color: '#000000' }
+          : item,
+      );
       setGongKeywords(list.map((item) => item.keyword));
       const colors = {};
       list.forEach((item) => {
@@ -248,7 +252,11 @@ export default function Home() {
       setGongColors(colors);
     });
     const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), (snap) => {
-      const list = snap.data()?.list || [];
+      const list = (snap.data()?.list || []).map((item) =>
+        typeof item === 'string'
+          ? { keyword: item, color: '#000000' }
+          : item,
+      );
       setSobangKeywords(list.map((item) => item.keyword));
       const colors = {};
       list.forEach((item) => {
