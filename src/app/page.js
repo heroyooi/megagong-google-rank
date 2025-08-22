@@ -77,6 +77,42 @@ const sobangKeywords = [
   '응급처치학',
 ];
 
+const gongColors = [
+  '#0d47a1',
+  '#1565c0',
+  '#1976d2',
+  '#1e88e5',
+  '#42a5f5',
+  '#64b5f6',
+  '#90caf9',
+  '#00acc1',
+  '#26c6da',
+  '#4dd0e1',
+  '#80deea',
+  '#5e35b1',
+  '#7e57c2',
+  '#9575cd',
+];
+
+const sobangColors = [
+  '#b71c1c',
+  '#c62828',
+  '#d32f2f',
+  '#e53935',
+  '#f4511e',
+  '#fb8c00',
+  '#ff9800',
+  '#ffb74d',
+  '#ffd54f',
+  '#ff8a65',
+  '#ff7043',
+  '#ff5252',
+  '#ff1744',
+  '#d81b60',
+  '#ad1457',
+  '#c2185b',
+];
+
 // ====== Utils ======
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -285,6 +321,8 @@ export default function Home() {
   const [chartLimit, setChartLimit] = useState(7);
   const [chartType, setChartType] = useState('donut');
   const [openCards, setOpenCards] = useState({});
+  const [modalKeyword, setModalKeyword] = useState(null);
+  const [modalGroup, setModalGroup] = useState(null);
 
   const {
     gongChartOptions,
@@ -302,41 +340,6 @@ export default function Home() {
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
-    const gongColors = [
-      '#0d47a1',
-      '#1565c0',
-      '#1976d2',
-      '#1e88e5',
-      '#42a5f5',
-      '#64b5f6',
-      '#90caf9',
-      '#00acc1',
-      '#26c6da',
-      '#4dd0e1',
-      '#80deea',
-      '#5e35b1',
-      '#7e57c2',
-      '#9575cd',
-    ];
-    const sobangColors = [
-      '#b71c1c',
-      '#c62828',
-      '#d32f2f',
-      '#e53935',
-      '#f4511e',
-      '#fb8c00',
-      '#ff9800',
-      '#ffb74d',
-      '#ffd54f',
-      '#ff8a65',
-      '#ff7043',
-      '#ff5252',
-      '#ff1744',
-      '#d81b60',
-      '#ad1457',
-      '#c2185b',
-    ];
-
     const buildLineOptions = (keywords, group) => {
       let maxRank = 1;
       const rawSeries = keywords.map((kw) => {
@@ -413,6 +416,43 @@ export default function Home() {
       sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
   }, [seoEntries, chartLimit]);
+
+  const modalChartOptions = useMemo(() => {
+    if (!modalKeyword || !modalGroup) return null;
+    const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
+    const dates = sorted.map(([d]) => d);
+    let maxRank = 1;
+    const data = sorted.map(([, details]) => {
+      const r = details?.rankings?.[modalGroup]?.[modalKeyword];
+      const val = getRankValue(r);
+      const num = typeof val === 'number' ? val : null;
+      if (num !== null) maxRank = Math.max(maxRank, num);
+      return num;
+    });
+    const finalMax = maxRank + 1;
+    const seriesData = data.map((v) => (v == null ? finalMax : v));
+    const keywords = modalGroup === 'gong' ? gongKeywords : sobangKeywords;
+    const colors = modalGroup === 'gong' ? gongColors : sobangColors;
+    const color = colors[keywords.indexOf(modalKeyword) % colors.length];
+    return {
+      tooltip: { trigger: 'axis' },
+      grid: { left: 40, right: 20, top: 40, bottom: 40 },
+      xAxis: { type: 'category', data: dates },
+      yAxis: { type: 'value', inverse: true, min: 1, max: finalMax },
+      series: [{ name: modalKeyword, type: 'line', data: seriesData }],
+      color: [color],
+    };
+  }, [modalKeyword, modalGroup, seoEntries]);
+
+  const openModal = (kw, group) => {
+    setModalKeyword(kw);
+    setModalGroup(group);
+  };
+
+  const closeModal = () => {
+    setModalKeyword(null);
+    setModalGroup(null);
+  };
 
   const toggleCard = (d) => {
     setOpenCards((prev) => ({ ...prev, [d]: !prev[d] }));
@@ -840,7 +880,15 @@ export default function Home() {
                                       : rankText(r);
                                   return (
                                     <tr key={kw}>
-                                      <td>{kw}</td>
+                                      <td>
+                                        <button
+                                          type='button'
+                                          className={styles.keywordButton}
+                                          onClick={() => openModal(kw, 'gong')}
+                                        >
+                                          {kw}
+                                        </button>
+                                      </td>
                                       <td>
                                         {prevDetails &&
                                           renderChange(value, prevValue)}
@@ -900,7 +948,15 @@ export default function Home() {
                                       : rankText(r);
                                   return (
                                     <tr key={kw}>
-                                      <td>{kw}</td>
+                                      <td>
+                                        <button
+                                          type='button'
+                                          className={styles.keywordButton}
+                                          onClick={() => openModal(kw, 'sobang')}
+                                        >
+                                          {kw}
+                                        </button>
+                                      </td>
                                       <td>
                                         {prevDetails &&
                                           renderChange(value, prevValue)}
@@ -946,6 +1002,30 @@ export default function Home() {
           </>
         )}
       </div>
+      {modalKeyword && (
+        <div className={styles.modalOverlay} onClick={closeModal}>
+          <div
+            className={styles.modalContent}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h4 className={styles.modalTitle}>{modalKeyword}</h4>
+            {modalChartOptions && (
+              <ReactECharts
+                className={styles.modalChart}
+                option={modalChartOptions}
+                notMerge
+              />
+            )}
+            <button
+              type='button'
+              className={styles.modalClose}
+              onClick={closeModal}
+            >
+              닫기
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
