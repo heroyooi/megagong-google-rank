@@ -395,7 +395,11 @@ export default function Home() {
       });
       const color = group === 'gong' ? gongColors : sobangColors;
       return {
-        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+        tooltip: {
+          trigger: 'item',
+          formatter: ({ name, value, percent }) =>
+            `${name}: ${Number(value).toFixed(2)} (${percent.toFixed(2)}%)`,
+        },
         legend: { type: 'scroll' },
         series: [
           {
