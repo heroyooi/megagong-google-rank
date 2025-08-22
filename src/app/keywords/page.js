@@ -76,7 +76,12 @@ export default function KeywordManager() {
               onDrop={() => onDrop('gong', idx)}
             >
               <span>{kw}</span>
-              <button onClick={() => remove('gong', idx)}>삭제</button>
+              <button
+                className={styles.button}
+                onClick={() => remove('gong', idx)}
+              >
+                삭제
+              </button>
             </li>
           ))}
         </ul>
@@ -86,7 +91,9 @@ export default function KeywordManager() {
             onChange={(e) => setNewGong(e.target.value)}
             placeholder='키워드 추가'
           />
-          <button onClick={() => add('gong')}>추가</button>
+          <button className={styles.button} onClick={() => add('gong')}>
+            추가
+          </button>
         </div>
       </div>
       <div className={styles.group}>
@@ -102,7 +109,12 @@ export default function KeywordManager() {
               onDrop={() => onDrop('sobang', idx)}
             >
               <span>{kw}</span>
-              <button onClick={() => remove('sobang', idx)}>삭제</button>
+              <button
+                className={styles.button}
+                onClick={() => remove('sobang', idx)}
+              >
+                삭제
+              </button>
             </li>
           ))}
         </ul>
@@ -112,10 +124,12 @@ export default function KeywordManager() {
             onChange={(e) => setNewSobang(e.target.value)}
             placeholder='키워드 추가'
           />
-          <button onClick={() => add('sobang')}>추가</button>
+          <button className={styles.button} onClick={() => add('sobang')}>
+            추가
+          </button>
         </div>
       </div>
-      <Link href='/' className={styles.backLink}>
+      <Link href='/' className={`${styles.button} ${styles.backButton}`}>
         메인으로
       </Link>
     </div>

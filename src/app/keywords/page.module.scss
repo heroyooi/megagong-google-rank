@@ -40,15 +40,24 @@
     border: 1px solid var(--line);
     border-radius: 4px;
   }
+}
 
-  button {
-    padding: 6px 12px;
+.button {
+  @include m.soft-border;
+  padding: 6px 12px;
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+
+  &:hover {
+    background: var(--primary-600);
   }
 }
 
-.backLink {
+.backButton {
   display: inline-block;
   margin-top: 20px;
-  color: var(--primary);
-  text-decoration: none;
 }
