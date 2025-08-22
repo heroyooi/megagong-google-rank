@@ -301,6 +301,7 @@
       .chartControls {
         display: flex;
         justify-content: flex-end;
+        align-items: center;
         margin-bottom: 8px;
 
         label {
@@ -315,6 +316,11 @@
             color: var(--text);
           }
         }
+      }
+
+      .chartSectionTitle {
+        margin: 6px 0 8px;
+        font-weight: 700;
       }
 
       .chartGroup {
