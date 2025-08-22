@@ -300,8 +300,26 @@
 
       .chartControls {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
+        align-items: center;
         margin-bottom: 8px;
+
+        .chartTypeButtons {
+          display: flex;
+          gap: 8px;
+
+          button {
+            appearance: none;
+            border: none;
+            @include m.soft-border;
+            background: var(--panel);
+            color: var(--text);
+            padding: 4px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+          }
+        }
 
         label {
           font-size: 13px;
@@ -315,6 +333,11 @@
             color: var(--text);
           }
         }
+      }
+
+      .chartTypeActive {
+        background: linear-gradient(180deg, var(--primary-50), transparent);
+        color: var(--primary);
       }
 
       .chartGroup {

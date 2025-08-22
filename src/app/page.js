@@ -283,11 +283,22 @@ export default function Home() {
   const allSeoData = useSeoDataRealtime();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
+  const [chartType, setChartType] = useState('line');
   const [openCards, setOpenCards] = useState({});
 
-  const { gongChartOptions, sobangChartOptions } = useMemo(() => {
+  const {
+    gongChartOptions,
+    sobangChartOptions,
+    gongDonutOptions,
+    sobangDonutOptions,
+  } = useMemo(() => {
     if (seoEntries.length === 0)
-      return { gongChartOptions: null, sobangChartOptions: null };
+      return {
+        gongChartOptions: null,
+        sobangChartOptions: null,
+        gongDonutOptions: null,
+        sobangDonutOptions: null,
+      };
     const sorted = [...seoEntries].sort((a, b) => a[0].localeCompare(b[0]));
     const limited = sorted.slice(-chartLimit);
     const dates = limited.map(([d]) => d);
@@ -326,7 +337,7 @@ export default function Home() {
       '#c2185b',
     ];
 
-    const buildOptions = (keywords, group) => {
+    const buildLineOptions = (keywords, group) => {
       let maxRank = 1;
       const rawSeries = keywords.map((kw) => {
         const data = limited.map(([, details]) => {
@@ -359,9 +370,47 @@ export default function Home() {
       };
     };
 
+    const buildDonutOptions = (keywords, group) => {
+      let maxRank = 1;
+      const values = {};
+      keywords.forEach((kw) => {
+        const data = limited.map(([, details]) => {
+          const r = details?.rankings?.[group]?.[kw];
+          const val = getRankValue(r);
+          const num = typeof val === 'number' ? val : null;
+          if (num !== null) maxRank = Math.max(maxRank, num);
+          return num;
+        });
+        values[kw] = data;
+      });
+      const finalMax = maxRank + 1;
+      const data = keywords.map((kw) => {
+        const arr = values[kw].map((v) => (v == null ? finalMax : v));
+        const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+        const score = finalMax - avg + 1;
+        return { name: kw, value: score };
+      });
+      const color = group === 'gong' ? gongColors : sobangColors;
+      return {
+        tooltip: { trigger: 'item', formatter: '{b}: {c} ({d}%)' },
+        legend: { type: 'scroll' },
+        series: [
+          {
+            name: '평균 순위',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            data,
+          },
+        ],
+        color,
+      };
+    };
+
     return {
-      gongChartOptions: buildOptions(gongKeywords, 'gong'),
-      sobangChartOptions: buildOptions(sobangKeywords, 'sobang'),
+      gongChartOptions: buildLineOptions(gongKeywords, 'gong'),
+      sobangChartOptions: buildLineOptions(sobangKeywords, 'sobang'),
+      gongDonutOptions: buildDonutOptions(gongKeywords, 'gong'),
+      sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
   }, [seoEntries, chartLimit]);
 
@@ -655,6 +704,26 @@ export default function Home() {
             {gongChartOptions && sobangChartOptions && (
               <div className={styles.chartSection}>
                 <div className={styles.chartControls}>
+                  <div className={styles.chartTypeButtons}>
+                    <button
+                      type='button'
+                      className={
+                        chartType === 'line' ? styles.chartTypeActive : ''
+                      }
+                      onClick={() => setChartType('line')}
+                    >
+                      라인차트
+                    </button>
+                    <button
+                      type='button'
+                      className={
+                        chartType === 'donut' ? styles.chartTypeActive : ''
+                      }
+                      onClick={() => setChartType('donut')}
+                    >
+                      도넛차트
+                    </button>
+                  </div>
                   <label>
                     최근
                     <select
@@ -674,14 +743,22 @@ export default function Home() {
                   <h4 className={styles.chartTitle}>공무원</h4>
                   <ReactECharts
                     className={styles.chart}
-                    option={gongChartOptions}
+                    option={
+                      chartType === 'line'
+                        ? gongChartOptions
+                        : gongDonutOptions
+                    }
                   />
                 </div>
                 <div className={styles.chartGroup}>
                   <h4 className={styles.chartTitle}>소방</h4>
                   <ReactECharts
                     className={styles.chart}
-                    option={sobangChartOptions}
+                    option={
+                      chartType === 'line'
+                        ? sobangChartOptions
+                        : sobangDonutOptions
+                    }
                   />
                 </div>
               </div>
