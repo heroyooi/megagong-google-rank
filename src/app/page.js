@@ -869,10 +869,11 @@ export default function Home() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {Object.entries(gong).map(([kw, r]) => {
+                                {gongKeywords.map((kw) => {
+                                  const r = gong[kw];
                                   const value = getRankValue(r);
                                   const src =
-                                    typeof r === 'object' && r.source
+                                    typeof r === 'object' && r?.source
                                       ? r.source
                                       : '';
                                   const prevValue = prevGong[kw];
@@ -937,10 +938,11 @@ export default function Home() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {Object.entries(sobang).map(([kw, r]) => {
+                                {sobangKeywords.map((kw) => {
+                                  const r = sobang[kw];
                                   const value = getRankValue(r);
                                   const src =
-                                    typeof r === 'object' && r.source
+                                    typeof r === 'object' && r?.source
                                       ? r.source
                                       : '';
                                   const prevValue = prevSobang[kw];
