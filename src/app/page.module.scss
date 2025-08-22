@@ -300,7 +300,7 @@
 
       .chartControls {
         display: flex;
-        justify-content: flex-end;
+        justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
 
@@ -314,6 +314,38 @@
             border-radius: 6px;
             background: var(--panel);
             color: var(--text);
+          }
+        }
+
+        .chartTabs {
+          display: flex;
+          gap: 8px;
+
+          .chartTab {
+            appearance: none;
+            border: none;
+            @include m.soft-border;
+            background: var(--panel);
+            color: var(--text-sub);
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            font-size: 13px;
+            font-weight: 700;
+            transition: background-color 0.2s ease, color 0.2s ease;
+
+            &:hover {
+              opacity: 0.8;
+            }
+
+            &:focus-visible {
+              @include m.focus-ring;
+            }
+          }
+
+          .chartTabActive {
+            background: var(--primary);
+            color: var(--panel);
           }
         }
       }

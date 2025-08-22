@@ -283,6 +283,7 @@ export default function Home() {
   const allSeoData = useSeoDataRealtime();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
+  const [chartType, setChartType] = useState('donut');
   const [openCards, setOpenCards] = useState({});
 
   const {
@@ -701,58 +702,73 @@ export default function Home() {
         ) : (
           <>
             {gongChartOptions && sobangChartOptions && (
-              <>
-                <div className={styles.chartSection}>
-                  <div className={styles.chartControls}>
-                    <label>
-                      최근
-                      <select
-                        value={chartLimit}
-                        onChange={(e) => setChartLimit(Number(e.target.value))}
-                      >
-                        {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
-                          <option key={n} value={n}>
-                            {n}
-                          </option>
-                        ))}
-                      </select>
-                      건
-                    </label>
-                  </div>
-                  <h4 className={styles.chartSectionTitle}>도넛차트</h4>
-                  <div className={styles.chartGroup}>
-                    <h5 className={styles.chartTitle}>공무원</h5>
-                    <ReactECharts
-                      className={styles.chart}
-                      option={gongDonutOptions}
-                    />
-                  </div>
-                  <div className={styles.chartGroup}>
-                    <h5 className={styles.chartTitle}>소방</h5>
-                    <ReactECharts
-                      className={styles.chart}
-                      option={sobangDonutOptions}
-                    />
+              <div className={styles.chartSection}>
+                <div className={styles.chartControls}>
+                  <label>
+                    최근
+                    <select
+                      value={chartLimit}
+                      onChange={(e) => setChartLimit(Number(e.target.value))}
+                    >
+                      {Array.from({ length: 60 }, (_, i) => i + 1).map((n) => (
+                        <option key={n} value={n}>
+                          {n}
+                        </option>
+                      ))}
+                    </select>
+                    건
+                  </label>
+                  <div className={styles.chartTabs}>
+                    <button
+                      className={`${styles.chartTab} ${chartType === 'donut' ? styles.chartTabActive : ''}`}
+                      onClick={() => setChartType('donut')}
+                    >
+                      도넛차트
+                    </button>
+                    <button
+                      className={`${styles.chartTab} ${chartType === 'line' ? styles.chartTabActive : ''}`}
+                      onClick={() => setChartType('line')}
+                    >
+                      라인차트
+                    </button>
                   </div>
                 </div>
-                <div className={styles.chartSection}>
-                  <h4 className={styles.chartSectionTitle}>라인차트</h4>
-                  <div className={styles.chartGroup}>
-                    <h5 className={styles.chartTitle}>공무원</h5>
-                    <ReactECharts
-                      className={styles.chart}
-                      option={gongChartOptions}
-                    />
-                  </div>
-                  <div className={styles.chartGroup}>
-                    <h5 className={styles.chartTitle}>소방</h5>
-                    <ReactECharts
-                      className={styles.chart}
-                      option={sobangChartOptions}
-                    />
-                  </div>
-                </div>
-              </>
+                {chartType === 'donut' ? (
+                  <>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>공무원</h5>
+                      <ReactECharts
+                        className={styles.chart}
+                        option={gongDonutOptions}
+                      />
+                    </div>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>소방</h5>
+                      <ReactECharts
+                        className={styles.chart}
+                        option={sobangDonutOptions}
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>공무원</h5>
+                      <ReactECharts
+                        className={styles.chart}
+                        option={gongChartOptions}
+                      />
+                    </div>
+                    <div className={styles.chartGroup}>
+                      <h5 className={styles.chartTitle}>소방</h5>
+                      <ReactECharts
+                        className={styles.chart}
+                        option={sobangChartOptions}
+                      />
+                    </div>
+                  </>
+                )}
+              </div>
             )}
             <div className={styles.savedGrid}>
               {seoEntries.map(([d, details], idx) => {
