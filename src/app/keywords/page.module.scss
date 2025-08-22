@@ -1,14 +1,25 @@
 @use '@/styles/mixins' as m;
 
 .container {
-  max-width: 800px;
+  max-width: 900px;
   margin: 20px auto;
   padding: 20px;
   color: var(--text);
 }
 
+.groups {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 20px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
 .group {
-  margin-top: 32px;
+  /* grid children */
 }
 
 .groupTitle {
@@ -47,13 +58,21 @@
 .controls {
   display: flex;
   gap: 8px;
+}
 
-  input[type='text'] {
-    flex: 1;
-    padding: 6px;
-    border: 1px solid var(--line);
-    border-radius: 4px;
-  }
+.colorTextInput {
+  width: 90px;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.keywordInput {
+  flex: 1;
+  padding: 6px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
 }
 
 .button {

@@ -102,9 +102,10 @@ export default function KeywordManager() {
   return (
     <div className={styles.container}>
       <h1>키워드 관리자</h1>
-      <div className={styles.group}>
-        <h2 className={styles.groupTitle}>공무원</h2>
-        <ul className={styles.list}>
+      <div className={styles.groups}>
+        <div className={styles.group}>
+          <h2 className={styles.groupTitle}>공무원</h2>
+          <ul className={styles.list}>
           {gong.map((kw, idx) => (
             <li
               key={kw.keyword}
@@ -121,11 +122,17 @@ export default function KeywordManager() {
                   value={kw.color || '#000000'}
                   onChange={(e) => changeColor('gong', idx, e.target.value)}
                 />
+                <input
+                  type='text'
+                  className={styles.colorTextInput}
+                  value={kw.color || '#000000'}
+                  onChange={(e) => changeColor('gong', idx, e.target.value)}
+                />
                 <span>{kw.keyword}</span>
               </div>
-              <button
-                className={styles.button}
-                onClick={() => remove('gong', idx)}
+            <button
+              className={styles.button}
+              onClick={() => remove('gong', idx)}
               >
                 삭제
               </button>
@@ -141,6 +148,13 @@ export default function KeywordManager() {
           />
           <input
             type='text'
+            className={styles.colorTextInput}
+            value={newGongColor}
+            onChange={(e) => setNewGongColor(e.target.value)}
+          />
+          <input
+            type='text'
+            className={styles.keywordInput}
             value={newGong}
             onChange={(e) => setNewGong(e.target.value)}
             placeholder='키워드 추가'
@@ -169,11 +183,17 @@ export default function KeywordManager() {
                   value={kw.color || '#000000'}
                   onChange={(e) => changeColor('sobang', idx, e.target.value)}
                 />
+                <input
+                  type='text'
+                  className={styles.colorTextInput}
+                  value={kw.color || '#000000'}
+                  onChange={(e) => changeColor('sobang', idx, e.target.value)}
+                />
                 <span>{kw.keyword}</span>
               </div>
-              <button
-                className={styles.button}
-                onClick={() => remove('sobang', idx)}
+            <button
+              className={styles.button}
+              onClick={() => remove('sobang', idx)}
               >
                 삭제
               </button>
@@ -189,6 +209,13 @@ export default function KeywordManager() {
           />
           <input
             type='text'
+            className={styles.colorTextInput}
+            value={newSobangColor}
+            onChange={(e) => setNewSobangColor(e.target.value)}
+          />
+          <input
+            type='text'
+            className={styles.keywordInput}
             value={newSobang}
             onChange={(e) => setNewSobang(e.target.value)}
             placeholder='키워드 추가'
@@ -197,6 +224,7 @@ export default function KeywordManager() {
             추가
           </button>
         </div>
+      </div>
       </div>
       <Link href='/' className={`${styles.button} ${styles.backButton}`}>
         메인으로
