@@ -10,7 +10,9 @@ export default function KeywordManager() {
   const [gong, setGong] = useState([]);
   const [sobang, setSobang] = useState([]);
   const [newGong, setNewGong] = useState('');
+  const [newGongColor, setNewGongColor] = useState('#000000');
   const [newSobang, setNewSobang] = useState('');
+  const [newSobangColor, setNewSobangColor] = useState('#000000');
   const [drag, setDrag] = useState(null);
 
   useEffect(() => {
@@ -34,16 +36,31 @@ export default function KeywordManager() {
 
   const add = async (group) => {
     const value = group === 'gong' ? newGong.trim() : newSobang.trim();
+    const color = group === 'gong' ? newGongColor : newSobangColor;
     if (!value) return;
-    const arr = group === 'gong' ? [...gong, value] : [...sobang, value];
+    const item = { keyword: value, color };
+    const arr = group === 'gong' ? [...gong, item] : [...sobang, item];
     await update(group, arr);
-    if (group === 'gong') setNewGong('');
-    else setNewSobang('');
+    if (group === 'gong') {
+      setNewGong('');
+      setNewGongColor('#000000');
+    } else {
+      setNewSobang('');
+      setNewSobangColor('#000000');
+    }
   };
 
   const remove = async (group, index) => {
     const arr = group === 'gong' ? [...gong] : [...sobang];
     arr.splice(index, 1);
+    await update(group, arr);
+  };
+
+  const changeColor = async (group, index, color) => {
+    const arr = group === 'gong' ? [...gong] : [...sobang];
+    arr[index] = { ...arr[index], color };
+    if (group === 'gong') setGong(arr);
+    else setSobang(arr);
     await update(group, arr);
   };
 
@@ -68,14 +85,22 @@ export default function KeywordManager() {
         <ul className={styles.list}>
           {gong.map((kw, idx) => (
             <li
-              key={kw}
+              key={kw.keyword}
               className={styles.item}
               draggable
               onDragStart={() => onDragStart('gong', idx)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => onDrop('gong', idx)}
             >
-              <span>{kw}</span>
+              <div className={styles.keyword}>
+                <input
+                  type='color'
+                  className={styles.colorInput}
+                  value={kw.color || '#000000'}
+                  onChange={(e) => changeColor('gong', idx, e.target.value)}
+                />
+                <span>{kw.keyword}</span>
+              </div>
               <button
                 className={styles.button}
                 onClick={() => remove('gong', idx)}
@@ -87,6 +112,13 @@ export default function KeywordManager() {
         </ul>
         <div className={styles.controls}>
           <input
+            type='color'
+            className={styles.colorInput}
+            value={newGongColor}
+            onChange={(e) => setNewGongColor(e.target.value)}
+          />
+          <input
+            type='text'
             value={newGong}
             onChange={(e) => setNewGong(e.target.value)}
             placeholder='키워드 추가'
@@ -101,14 +133,22 @@ export default function KeywordManager() {
         <ul className={styles.list}>
           {sobang.map((kw, idx) => (
             <li
-              key={kw}
+              key={kw.keyword}
               className={styles.item}
               draggable
               onDragStart={() => onDragStart('sobang', idx)}
               onDragOver={(e) => e.preventDefault()}
               onDrop={() => onDrop('sobang', idx)}
             >
-              <span>{kw}</span>
+              <div className={styles.keyword}>
+                <input
+                  type='color'
+                  className={styles.colorInput}
+                  value={kw.color || '#000000'}
+                  onChange={(e) => changeColor('sobang', idx, e.target.value)}
+                />
+                <span>{kw.keyword}</span>
+              </div>
               <button
                 className={styles.button}
                 onClick={() => remove('sobang', idx)}
@@ -120,6 +160,13 @@ export default function KeywordManager() {
         </ul>
         <div className={styles.controls}>
           <input
+            type='color'
+            className={styles.colorInput}
+            value={newSobangColor}
+            onChange={(e) => setNewSobangColor(e.target.value)}
+          />
+          <input
+            type='text'
             value={newSobang}
             onChange={(e) => setNewSobang(e.target.value)}
             placeholder='키워드 추가'

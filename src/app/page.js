@@ -21,44 +21,6 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/firebaseClient';
 
-// ====== Keywords ======
-
-const gongColors = [
-  '#0d47a1',
-  '#1565c0',
-  '#1976d2',
-  '#1e88e5',
-  '#42a5f5',
-  '#64b5f6',
-  '#90caf9',
-  '#00acc1',
-  '#26c6da',
-  '#4dd0e1',
-  '#80deea',
-  '#5e35b1',
-  '#7e57c2',
-  '#9575cd',
-];
-
-const sobangColors = [
-  '#b71c1c',
-  '#c62828',
-  '#d32f2f',
-  '#e53935',
-  '#f4511e',
-  '#fb8c00',
-  '#ff9800',
-  '#ffb74d',
-  '#ffd54f',
-  '#ff8a65',
-  '#ff7043',
-  '#ff5252',
-  '#ff1744',
-  '#d81b60',
-  '#ad1457',
-  '#c2185b',
-];
-
 // ====== Utils ======
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
 
@@ -253,6 +215,8 @@ export default function Home() {
   const [note, setNote] = useState('');
   const [gongKeywords, setGongKeywords] = useState([]);
   const [sobangKeywords, setSobangKeywords] = useState([]);
+  const [gongColors, setGongColors] = useState({});
+  const [sobangColors, setSobangColors] = useState({});
   const [gongState, setGongState] = useState({}); // {keyword: rank|'loading'|undefined}
   const [sobangState, setSobangState] = useState({});
   const [gongSource, setGongSource] = useState({});
@@ -275,10 +239,22 @@ export default function Home() {
   useEffect(() => {
     if (!db) return;
     const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), (snap) => {
-      setGongKeywords(snap.data()?.list || []);
+      const list = snap.data()?.list || [];
+      setGongKeywords(list.map((item) => item.keyword));
+      const colors = {};
+      list.forEach((item) => {
+        colors[item.keyword] = item.color || '#000000';
+      });
+      setGongColors(colors);
     });
     const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), (snap) => {
-      setSobangKeywords(snap.data()?.list || []);
+      const list = snap.data()?.list || [];
+      setSobangKeywords(list.map((item) => item.keyword));
+      const colors = {};
+      list.forEach((item) => {
+        colors[item.keyword] = item.color || '#000000';
+      });
+      setSobangColors(colors);
     });
     return () => {
       unsubG();
@@ -323,7 +299,8 @@ export default function Home() {
       keywords.forEach((kw, idx) => {
         selected[kw] = idx < 5;
       });
-      const color = group === 'gong' ? gongColors : sobangColors;
+      const colorMap = group === 'gong' ? gongColors : sobangColors;
+      const color = keywords.map((kw) => colorMap[kw] || '#000000');
       return {
         tooltip: { trigger: 'axis' },
         legend: { type: 'scroll', selected },
@@ -355,7 +332,8 @@ export default function Home() {
         const score = finalMax - avg + 1;
         return { name: kw, value: score };
       });
-      const color = group === 'gong' ? gongColors : sobangColors;
+      const colorMap = group === 'gong' ? gongColors : sobangColors;
+      const color = keywords.map((kw) => colorMap[kw] || '#000000');
       return {
         tooltip: {
           trigger: 'item',
@@ -381,7 +359,7 @@ export default function Home() {
       gongDonutOptions: buildDonutOptions(gongKeywords, 'gong'),
       sobangDonutOptions: buildDonutOptions(sobangKeywords, 'sobang'),
     };
-  }, [seoEntries, chartLimit, gongKeywords, sobangKeywords]);
+  }, [seoEntries, chartLimit, gongKeywords, sobangKeywords, gongColors, sobangColors]);
 
   const modalChartOptions = useMemo(() => {
     if (!modalKeyword || !modalGroup) return null;
@@ -397,9 +375,8 @@ export default function Home() {
     });
     const finalMax = maxRank + 1;
     const seriesData = data.map((v) => (v == null ? finalMax : v));
-    const keywords = modalGroup === 'gong' ? gongKeywords : sobangKeywords;
-    const colors = modalGroup === 'gong' ? gongColors : sobangColors;
-    const color = colors[keywords.indexOf(modalKeyword) % colors.length];
+    const colorMap = modalGroup === 'gong' ? gongColors : sobangColors;
+    const color = colorMap[modalKeyword] || '#000000';
     return {
       tooltip: { trigger: 'axis' },
       grid: { left: 40, right: 20, top: 40, bottom: 40 },
@@ -408,7 +385,7 @@ export default function Home() {
       series: [{ name: modalKeyword, type: 'line', data: seriesData }],
       color: [color],
     };
-  }, [modalKeyword, modalGroup, seoEntries, gongKeywords, sobangKeywords]);
+  }, [modalKeyword, modalGroup, seoEntries, gongKeywords, sobangKeywords, gongColors, sobangColors]);
 
   const openModal = (kw, group) => {
     setModalKeyword(kw);
