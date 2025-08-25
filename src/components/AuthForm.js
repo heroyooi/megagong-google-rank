@@ -40,8 +40,8 @@ export default function AuthForm({ mode }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: nickname });
         await sendEmailVerification(cred.user);
-        setVerificationSent(true);
         await signOut(auth);
+        setVerificationSent(true);
         intervalRef.current = setInterval(async () => {
           try {
             const c = await signInWithEmailAndPassword(auth, email, password);
