@@ -19,7 +19,8 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
-import { db } from '@/firebaseClient';
+import { onAuthStateChanged } from 'firebase/auth';
+import { db, auth } from '@/firebaseClient';
 
 // ====== Utils ======
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -211,6 +212,7 @@ function renderChange(curr, prev) {
 // ====== UI ======
 export default function Home() {
   // 입력/상태
+  const [user, setUser] = useState(null);
   const [date, setDate] = useState(getToday());
   const [note, setNote] = useState('');
   const [gongKeywords, setGongKeywords] = useState([]);
@@ -228,6 +230,19 @@ export default function Home() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState(null);
   const [theme, setTheme] = useState('light');
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+  const isAdmin = user && user.email === adminEmail;
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (u) => {
+      if (u && u.emailVerified) {
+        setUser(u);
+      } else {
+        setUser(null);
+      }
+    });
+    return () => unsub();
+  }, []);
 
   useEffect(() => {
     const current =
@@ -455,6 +470,10 @@ export default function Home() {
   }, [seoEntries]);
 
   const handleFetchGong = async () => {
+    if (!isAdmin) {
+      alert('관리자 계정이 아닙니다.');
+      return;
+    }
     setIsGongDone(false);
     setMsg(null);
     const nextRank = { ...gongState };
@@ -481,6 +500,10 @@ export default function Home() {
   };
 
   const handleFetchSobang = async () => {
+    if (!isAdmin) {
+      alert('관리자 계정이 아닙니다.');
+      return;
+    }
     setIsSobangDone(false);
     setMsg(null);
     const nextRank = { ...sobangState };
@@ -515,6 +538,10 @@ export default function Home() {
   }, [isGongDone, isSobangDone, gongState, sobangState]);
 
   const handleSave = async () => {
+    if (!isAdmin) {
+      alert('관리자 계정이 아닙니다.');
+      return;
+    }
     if (!canSave) {
       setMsg(
         '공무원/소방 순위를 먼저 모두 가져오고(완료), 날짜를 선택해 저장하세요.'
@@ -552,11 +579,13 @@ export default function Home() {
       <h1 className={styles.title}>
         NS <span>(Next SEO Master)</span>
       </h1>
-      <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
-      <p className={styles.notice}>원하는 날짜를 선택해 저장하세요.</p>
+      {user && (
+        <>
+          <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
+          <p className={styles.notice}>원하는 날짜를 선택해 저장하세요.</p>
 
-      {/* 크롤링 영역 */}
-      <div className={styles.keywordGrid}>
+          {/* 크롤링 영역 */}
+          <div className={styles.keywordGrid}>
         {/* 공무원 */}
         <div className={styles.keywordBox}>
           <div className={styles.keywordHeader}>
@@ -646,10 +675,10 @@ export default function Home() {
             })}
           </ul>
         </div>
-      </div>
+          </div>
 
-      {/* 입력/저장 영역 */}
-      <div className={styles.form}>
+          {/* 입력/저장 영역 */}
+          <div className={styles.form}>
         <div className={styles.formRow}>
           <label htmlFor='seo_date'>날짜</label>
           <input
@@ -686,7 +715,9 @@ export default function Home() {
         </div>
 
         {msg && <p className={styles.message}>{msg}</p>}
-      </div>
+          </div>
+        </>
+      )}
 
       {/* 저장된 데이터 테이블 */}
       <div className={styles.savedData}>
