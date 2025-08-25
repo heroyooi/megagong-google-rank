@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { onIdTokenChanged, signOut } from 'firebase/auth';
 import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/firebaseClient';
@@ -13,7 +13,6 @@ export default function Header() {
   const [unverifiedEmail, setUnverifiedEmail] = useState(null); // 인증 대기 안내용
   const pathname = usePathname();
   const router = useRouter();
-  const verifiedAlertShown = useRef(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -30,7 +29,6 @@ export default function Header() {
       if (!u) {
         setUser(null);
         setUnverifiedEmail(null);
-        verifiedAlertShown.current = false; // 세션 초기화 시 플래그 리셋
         return;
       }
 
@@ -42,10 +40,7 @@ export default function Header() {
         setUser(u);
         setUnverifiedEmail(null);
 
-        // ✅ 로그인/회원가입 페이지에서 인증 완료되면 얼럿 + 메인 이동
-        if (isAuthPage && !verifiedAlertShown.current) {
-          verifiedAlertShown.current = true;
-          alert('이메일 인증이 완료되었습니다.');
+        if (isAuthPage) {
           router.replace('/');
         }
       } else {
