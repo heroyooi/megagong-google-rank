@@ -2,8 +2,8 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { onIdTokenChanged, signOut } from 'firebase/auth';
-import { usePathname, useRouter } from 'next/navigation';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
 
@@ -11,7 +11,6 @@ export default function Header() {
   const [theme, setTheme] = useState('light');
   const [user, setUser] = useState(null); // ✅ "검증된" 사용자만 들어감
   const [unverifiedEmail, setUnverifiedEmail] = useState(null); // 인증 대기 안내용
-  const pathname = usePathname();
   const router = useRouter();
 
   useEffect(() => {
@@ -23,9 +22,7 @@ export default function Header() {
     setTheme(initial);
     document.documentElement.setAttribute('data-theme', initial);
 
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-    const unsub = onIdTokenChanged(auth, async (u) => {
+    const unsub = onAuthStateChanged(auth, async (u) => {
       if (!u) {
         setUser(null);
         setUnverifiedEmail(null);
@@ -39,24 +36,14 @@ export default function Header() {
       if (u.emailVerified) {
         setUser(u);
         setUnverifiedEmail(null);
-
-        if (isAuthPage) {
-          router.replace('/');
-        }
       } else {
         setUser(null);
         setUnverifiedEmail(u.email);
-
-        if (!isAuthPage) {
-          try {
-            await signOut(auth);
-          } catch {}
-        }
       }
     });
 
     return () => unsub();
-  }, [pathname, router]);
+  }, []);
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -72,7 +59,6 @@ export default function Header() {
       setUser(null);
       setUnverifiedEmail(null);
       router.replace('/login');
-      router.refresh();
     } catch (err) {
       console.error('Failed to sign out', err);
       alert('로그아웃에 실패했습니다.');
