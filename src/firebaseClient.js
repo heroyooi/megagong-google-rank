@@ -11,20 +11,10 @@ const firebaseConfig = {
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
 };
 
-let app = null;
-let auth = null;
-let googleProvider = null;
-let db = null;
+const app =
+  getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 
-if (typeof window !== 'undefined') {
-  if (!getApps().length) {
-    app = initializeApp(firebaseConfig);
-  } else {
-    app = getApps()[0];
-  }
-  auth = getAuth(app);
-  googleProvider = new GoogleAuthProvider();
-  db = getFirestore(app);
-}
+export const db = getFirestore(app);
+export const auth = getAuth(app);
 
-export { db, auth, googleProvider };
+export const googleProvider = new GoogleAuthProvider();
