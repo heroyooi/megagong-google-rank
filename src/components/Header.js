@@ -100,15 +100,15 @@ export default function Header() {
 
           {user ? (
             <>
+              <span className={styles.welcome}>
+                {user.email}
+                {user.displayName ? `(${user.displayName})` : ''}님 반갑습니다.
+              </span>
               {user.email === adminEmail && (
                 <Link href='/keywords' className={styles.managerLink}>
                   키워드 관리자
                 </Link>
               )}
-              <span className={styles.welcome}>
-                {user.email}
-                {user.displayName ? `(${user.displayName})` : ''}님 반갑습니다.
-              </span>
               <button onClick={handleLogout} className={styles.logout}>
                 로그아웃
               </button>
