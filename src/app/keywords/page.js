@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { db } from '@/firebaseClient';
 import styles from './page.module.scss';
 
@@ -17,34 +17,27 @@ export default function KeywordManager() {
 
   useEffect(() => {
     if (!db) return;
-    const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), async (snap) => {
-      const list = snap.data()?.list || [];
-      const mapped = list.map((item) =>
-        typeof item === 'string'
-          ? { keyword: item, color: '#000000' }
-          : item,
+    (async () => {
+      const gongSnap = await getDoc(doc(db, 'keywords', 'gong'));
+      const gongList = gongSnap.data()?.list || [];
+      const gongMapped = gongList.map((item) =>
+        typeof item === 'string' ? { keyword: item, color: '#000000' } : item,
       );
-      setGong(mapped);
-      if (list.some((item) => typeof item === 'string')) {
-        await setDoc(doc(db, 'keywords', 'gong'), { list: mapped });
+      setGong(gongMapped);
+      if (gongList.some((item) => typeof item === 'string')) {
+        await setDoc(doc(db, 'keywords', 'gong'), { list: gongMapped });
       }
-    });
-    const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), async (snap) => {
-      const list = snap.data()?.list || [];
-      const mapped = list.map((item) =>
-        typeof item === 'string'
-          ? { keyword: item, color: '#000000' }
-          : item,
+
+      const sobangSnap = await getDoc(doc(db, 'keywords', 'sobang'));
+      const sobangList = sobangSnap.data()?.list || [];
+      const sobangMapped = sobangList.map((item) =>
+        typeof item === 'string' ? { keyword: item, color: '#000000' } : item,
       );
-      setSobang(mapped);
-      if (list.some((item) => typeof item === 'string')) {
-        await setDoc(doc(db, 'keywords', 'sobang'), { list: mapped });
+      setSobang(sobangMapped);
+      if (sobangList.some((item) => typeof item === 'string')) {
+        await setDoc(doc(db, 'keywords', 'sobang'), { list: sobangMapped });
       }
-    });
-    return () => {
-      unsubG();
-      unsubS();
-    };
+    })();
   }, []);
 
   const update = async (group, arr) => {
@@ -60,9 +53,11 @@ export default function KeywordManager() {
     const arr = group === 'gong' ? [...gong, item] : [...sobang, item];
     await update(group, arr);
     if (group === 'gong') {
+      setGong(arr);
       setNewGong('');
       setNewGongColor('#000000');
     } else {
+      setSobang(arr);
       setNewSobang('');
       setNewSobangColor('#000000');
     }
@@ -72,6 +67,8 @@ export default function KeywordManager() {
     const arr = group === 'gong' ? [...gong] : [...sobang];
     arr.splice(index, 1);
     await update(group, arr);
+    if (group === 'gong') setGong(arr);
+    else setSobang(arr);
   };
 
   const changeColor = async (group, index, color) => {
@@ -96,6 +93,8 @@ export default function KeywordManager() {
     const [moved] = arr.splice(drag.index, 1);
     arr.splice(index, 0, moved);
     setDrag(null);
+    if (group === 'gong') setGong(arr);
+    else setSobang(arr);
     await update(group, arr);
   };
 

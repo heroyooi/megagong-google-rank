@@ -14,12 +14,12 @@ import {
   setDoc,
   deleteDoc,
   collection,
-  onSnapshot,
   serverTimestamp,
   query,
   orderBy,
+  getDoc,
+  getDocs,
 } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '@/firebaseClient';
 
 // ====== Utils ======
@@ -162,20 +162,20 @@ async function deleteSeoData(date) {
   return true;
 }
 
-/** Firestore: 실시간 구독 */
-function useSeoDataRealtime() {
+/** Firestore: 한 번만 가져오기 */
+function useSeoData() {
   const [data, setData] = useState({});
   useEffect(() => {
     if (!db) return;
-    const q = query(collection(db, 'seoRanks'), orderBy('date', 'desc'));
-    const unsub = onSnapshot(q, (snap) => {
+    (async () => {
+      const q = query(collection(db, 'seoRanks'), orderBy('date', 'desc'));
+      const snap = await getDocs(q);
       const obj = {};
       snap.forEach((docSnap) => {
         obj[docSnap.id] = docSnap.data();
       });
       setData(obj);
-    });
-    return () => unsub && unsub();
+    })();
   }, []);
   return data;
 }
@@ -234,14 +234,12 @@ export default function Home() {
   const isAdmin = user && user.email === adminEmail;
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (u && u.emailVerified) {
-        setUser(u);
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsub();
+    const u = auth?.currentUser;
+    if (u && u.emailVerified) {
+      setUser(u);
+    } else {
+      setUser(null);
+    }
   }, []);
 
   useEffect(() => {
@@ -260,7 +258,7 @@ export default function Home() {
     return () => observer.disconnect();
   }, []);
 
-  const allSeoData = useSeoDataRealtime();
+  const allSeoData = useSeoData();
   const seoEntries = useMemo(() => Object.entries(allSeoData), [allSeoData]);
   const [chartLimit, setChartLimit] = useState(7);
   const [openCards, setOpenCards] = useState({});
@@ -269,36 +267,29 @@ export default function Home() {
 
   useEffect(() => {
     if (!db) return;
-    const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), (snap) => {
-      const list = (snap.data()?.list || []).map((item) =>
-        typeof item === 'string'
-          ? { keyword: item, color: '#000000' }
-          : item,
+    (async () => {
+      const gongSnap = await getDoc(doc(db, 'keywords', 'gong'));
+      const gongList = (gongSnap.data()?.list || []).map((item) =>
+        typeof item === 'string' ? { keyword: item, color: '#000000' } : item,
       );
-      setGongKeywords(list.map((item) => item.keyword));
-      const colors = {};
-      list.forEach((item) => {
-        colors[item.keyword] = item.color || '#000000';
+      setGongKeywords(gongList.map((item) => item.keyword));
+      const gongColorMap = {};
+      gongList.forEach((item) => {
+        gongColorMap[item.keyword] = item.color || '#000000';
       });
-      setGongColors(colors);
-    });
-    const unsubS = onSnapshot(doc(db, 'keywords', 'sobang'), (snap) => {
-      const list = (snap.data()?.list || []).map((item) =>
-        typeof item === 'string'
-          ? { keyword: item, color: '#000000' }
-          : item,
+      setGongColors(gongColorMap);
+
+      const sobangSnap = await getDoc(doc(db, 'keywords', 'sobang'));
+      const sobangList = (sobangSnap.data()?.list || []).map((item) =>
+        typeof item === 'string' ? { keyword: item, color: '#000000' } : item,
       );
-      setSobangKeywords(list.map((item) => item.keyword));
-      const colors = {};
-      list.forEach((item) => {
-        colors[item.keyword] = item.color || '#000000';
+      setSobangKeywords(sobangList.map((item) => item.keyword));
+      const sobangColorMap = {};
+      sobangList.forEach((item) => {
+        sobangColorMap[item.keyword] = item.color || '#000000';
       });
-      setSobangColors(colors);
-    });
-    return () => {
-      unsubG();
-      unsubS();
-    };
+      setSobangColors(sobangColorMap);
+    })();
   }, []);
 
   const { gongChartOptions, sobangChartOptions } = useMemo(() => {
