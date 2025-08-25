@@ -1,9 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { onIdTokenChanged, signOut } from 'firebase/auth';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
 
@@ -12,6 +12,8 @@ export default function Header() {
   const [user, setUser] = useState(null); // ✅ "검증된" 사용자만 들어감
   const [unverifiedEmail, setUnverifiedEmail] = useState(null); // 인증 대기 안내용
   const pathname = usePathname();
+  const router = useRouter();
+  const verifiedAlertShown = useRef(false);
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -28,33 +30,38 @@ export default function Header() {
       if (!u) {
         setUser(null);
         setUnverifiedEmail(null);
+        verifiedAlertShown.current = false; // 세션 초기화 시 플래그 리셋
         return;
       }
 
       try {
         await u.reload();
-      } catch (_) {
-        // 네트워크 에러 등은 무시
-      }
+      } catch {}
 
       if (u.emailVerified) {
-        setUser(u); // ✅ 검증된 사용자만 로그인 UI 노출
+        setUser(u);
         setUnverifiedEmail(null);
+
+        // ✅ 로그인/회원가입 페이지에서 인증 완료되면 얼럿 + 메인 이동
+        if (isAuthPage && !verifiedAlertShown.current) {
+          verifiedAlertShown.current = true;
+          alert('이메일 인증이 완료되었습니다.');
+          router.replace('/');
+        }
       } else {
-        setUser(null); // ✅ 미인증이면 비로그인 UI 유지
+        setUser(null);
         setUnverifiedEmail(u.email);
 
-        // 회원가입/로그인 페이지가 아닌 곳에서 미인증이면(보안상) 세션 끊기 (선택)
         if (!isAuthPage) {
           try {
             await signOut(auth);
-          } catch (_) {}
+          } catch {}
         }
       }
     });
 
     return () => unsub();
-  }, [pathname]);
+  }, [pathname, router]);
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';

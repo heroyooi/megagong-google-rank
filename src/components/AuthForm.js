@@ -34,10 +34,7 @@ export default function AuthForm({ mode }) {
     try {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
-        // router.push('/');
-        console.log(111);
       } else {
-        console.log(222);
         const cred = await createUserWithEmailAndPassword(
           auth,
           email,
@@ -46,14 +43,14 @@ export default function AuthForm({ mode }) {
         await updateProfile(cred.user, { displayName: nickname });
         await sendEmailVerification(cred.user);
         setVerificationSent(true);
-        console.log(333);
+
         intervalRef.current = setInterval(async () => {
           try {
-            await auth.currentUser.reload();
-            if (auth.currentUser.emailVerified) {
+            await auth.currentUser?.reload();
+            if (auth.currentUser?.emailVerified) {
               clearInterval(intervalRef.current);
-              // router.push('/');
-              console.log(444);
+              alert('이메일 인증이 완료되었습니다.');
+              router.replace('/');
             }
           } catch (err) {
             setError(err.message);
