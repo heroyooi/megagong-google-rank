@@ -34,18 +34,26 @@ export default function AuthForm({ mode }) {
     try {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
-        router.push('/');
+        // router.push('/');
+        console.log(111);
       } else {
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        console.log(222);
+        const cred = await createUserWithEmailAndPassword(
+          auth,
+          email,
+          password
+        );
         await updateProfile(cred.user, { displayName: nickname });
         await sendEmailVerification(cred.user);
         setVerificationSent(true);
+        console.log(333);
         intervalRef.current = setInterval(async () => {
           try {
             await auth.currentUser.reload();
             if (auth.currentUser.emailVerified) {
               clearInterval(intervalRef.current);
-              router.push('/');
+              // router.push('/');
+              console.log(444);
             }
           } catch (err) {
             setError(err.message);
@@ -61,7 +69,7 @@ export default function AuthForm({ mode }) {
     setError('');
     try {
       await signInWithPopup(auth, googleProvider);
-      router.push('/');
+      // router.push('/');
     } catch (err) {
       setError(err.message);
     }
@@ -81,7 +89,9 @@ export default function AuthForm({ mode }) {
 
   return (
     <div className={styles.container}>
-      <h1 className={styles.title}>{mode === 'login' ? '로그인' : '회원가입'}</h1>
+      <h1 className={styles.title}>
+        {mode === 'login' ? '로그인' : '회원가입'}
+      </h1>
       {verificationSent && mode === 'signup' ? (
         <>
           <p className={styles.notice}>

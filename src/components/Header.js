@@ -2,23 +2,59 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { onIdTokenChanged, signOut } from 'firebase/auth';
+import { usePathname } from 'next/navigation';
 import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
 
 export default function Header() {
   const [theme, setTheme] = useState('light');
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null); // ✅ "검증된" 사용자만 들어감
+  const [unverifiedEmail, setUnverifiedEmail] = useState(null); // 인증 대기 안내용
+  const pathname = usePathname();
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia(
+      '(prefers-color-scheme: dark)'
+    ).matches;
     const initial = stored || (prefersDark ? 'dark' : 'light');
     setTheme(initial);
     document.documentElement.setAttribute('data-theme', initial);
-    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+
+    const isAuthPage = pathname === '/login' || pathname === '/signup';
+
+    const unsub = onIdTokenChanged(auth, async (u) => {
+      if (!u) {
+        setUser(null);
+        setUnverifiedEmail(null);
+        return;
+      }
+
+      try {
+        await u.reload();
+      } catch (_) {
+        // 네트워크 에러 등은 무시
+      }
+
+      if (u.emailVerified) {
+        setUser(u); // ✅ 검증된 사용자만 로그인 UI 노출
+        setUnverifiedEmail(null);
+      } else {
+        setUser(null); // ✅ 미인증이면 비로그인 UI 유지
+        setUnverifiedEmail(u.email);
+
+        // 회원가입/로그인 페이지가 아닌 곳에서 미인증이면(보안상) 세션 끊기 (선택)
+        if (!isAuthPage) {
+          try {
+            await signOut(auth);
+          } catch (_) {}
+        }
+      }
+    });
+
     return () => unsub();
-  }, []);
+  }, [pathname]);
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -27,8 +63,10 @@ export default function Header() {
     localStorage.setItem('theme', next);
   };
 
-  const handleLogout = () => {
-    signOut(auth);
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (_) {}
   };
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -43,7 +81,16 @@ export default function Header() {
             <img src='/images/logo.png' alt='Nextstudy logo' />
           )}
         </Link>
+
         <div className={styles.controls}>
+          {/* 미인증 안내 (로그인/회원가입 페이지에서만 노출되도록 하고 싶으면 조건에 pathname 체크 추가) */}
+          {!user && unverifiedEmail && (
+            <span className={styles.notice}>
+              {unverifiedEmail} 이메일로 인증 대기 중입니다. 메일의 링크를 눌러
+              인증을 완료해주세요.
+            </span>
+          )}
+
           {user ? (
             <>
               {user.email === adminEmail && (
@@ -69,6 +116,7 @@ export default function Header() {
               </Link>
             </>
           )}
+
           <button onClick={toggleTheme} aria-label='Toggle theme'>
             {theme === 'light' ? (
               <svg
@@ -102,4 +150,3 @@ export default function Header() {
     </header>
   );
 }
-
