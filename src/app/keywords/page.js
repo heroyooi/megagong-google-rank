@@ -2,11 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import useKeywordPermission from '@/hooks/useKeywordPermission';
 import { doc, onSnapshot, setDoc } from 'firebase/firestore';
 import { db } from '@/firebaseClient';
 import styles from './page.module.scss';
 
 export default function KeywordManager() {
+  const router = useRouter();
+  const allowed = useKeywordPermission();
   const [gong, setGong] = useState([]);
   const [sobang, setSobang] = useState([]);
   const [newGong, setNewGong] = useState('');
@@ -16,7 +20,11 @@ export default function KeywordManager() {
   const [drag, setDrag] = useState(null);
 
   useEffect(() => {
-    if (!db) return;
+    if (allowed === false) router.replace('/');
+  }, [allowed, router]);
+
+  useEffect(() => {
+    if (allowed !== true || !db) return;
     const unsubG = onSnapshot(doc(db, 'keywords', 'gong'), async (snap) => {
       const list = snap.data()?.list || [];
       const mapped = list.map((item) =>
@@ -45,7 +53,9 @@ export default function KeywordManager() {
       unsubG();
       unsubS();
     };
-  }, []);
+  }, [allowed]);
+
+  if (allowed !== true) return null;
 
   const update = async (group, arr) => {
     if (!db) return;

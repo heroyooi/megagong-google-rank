@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import { useAuth } from '@/context/AuthContext';
+import useKeywordPermission from '@/hooks/useKeywordPermission';
 import dynamic from 'next/dynamic';
 import styles from './page.module.scss';
 
@@ -19,8 +21,7 @@ import {
   query,
   orderBy,
 } from 'firebase/firestore';
-import { onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from '@/firebaseClient';
+import { db } from '@/firebaseClient';
 
 // ====== Utils ======
 const delay = (ms) => new Promise((res) => setTimeout(res, ms));
@@ -212,7 +213,8 @@ function renderChange(curr, prev) {
 // ====== UI ======
 export default function Home() {
   // 입력/상태
-  const [user, setUser] = useState(null);
+  const { user } = useAuth();
+  const hasPermission = useKeywordPermission();
   const [date, setDate] = useState(getToday());
   const [note, setNote] = useState('');
   const [gongKeywords, setGongKeywords] = useState([]);
@@ -232,17 +234,6 @@ export default function Home() {
   const [theme, setTheme] = useState('light');
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
   const isAdmin = user && user.email === adminEmail;
-
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (u) => {
-      if (u && u.emailVerified) {
-        setUser(u);
-      } else {
-        setUser(null);
-      }
-    });
-    return () => unsub();
-  }, []);
 
   useEffect(() => {
     const current =
@@ -579,7 +570,7 @@ export default function Home() {
       <h1 className={styles.title}>
         NS <span>(Next SEO Master)</span>
       </h1>
-      {user && (
+      {hasPermission && (
         <>
           <h2 className={styles.subTitle}>구글 검색 순위 비교(SEO)</h2>
           <p className={styles.notice}>원하는 날짜를 선택해 저장하세요.</p>

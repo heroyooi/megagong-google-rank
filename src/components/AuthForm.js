@@ -3,13 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { auth, googleProvider } from '@/firebaseClient';
+import { auth, googleProvider, db } from '@/firebaseClient';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
 } from 'firebase/auth';
+import { doc, setDoc } from 'firebase/firestore';
 import styles from './AuthForm.module.scss';
 
 export default function AuthForm({ mode }) {
@@ -25,7 +26,15 @@ export default function AuthForm({ mode }) {
 
     try {
       if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await setDoc(
+          doc(db, 'users', cred.user.uid),
+          {
+            email: cred.user.email,
+            displayName: cred.user.displayName || '',
+          },
+          { merge: true }
+        );
         // 원하면 로그인 후 이동
         // router.replace('/');
       } else {
@@ -37,6 +46,14 @@ export default function AuthForm({ mode }) {
         if (nickname) {
           await updateProfile(cred.user, { displayName: nickname });
         }
+        await setDoc(
+          doc(db, 'users', cred.user.uid),
+          {
+            email: cred.user.email,
+            displayName: nickname || cred.user.displayName || '',
+          },
+          { merge: true }
+        );
         // 이메일 인증 관련 로직 전부 제거
         // 원하면 가입 후 이동
         // router.replace('/');
@@ -49,7 +66,15 @@ export default function AuthForm({ mode }) {
   const handleGoogle = async () => {
     setError('');
     try {
-      await signInWithPopup(auth, googleProvider);
+      const cred = await signInWithPopup(auth, googleProvider);
+      await setDoc(
+        doc(db, 'users', cred.user.uid),
+        {
+          email: cred.user.email,
+          displayName: cred.user.displayName || '',
+        },
+        { merge: true }
+      );
       // 원하면 소셜 로그인 후 이동
       // router.replace('/');
     } catch (err) {

@@ -4,11 +4,13 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
+import useKeywordPermission from '@/hooks/useKeywordPermission';
 import styles from '@/styles/header.module.scss';
 
 export default function Header() {
   const [theme, setTheme] = useState('light');
   const { user, unverifiedEmail, logout } = useAuth();
+  const hasPermission = useKeywordPermission();
   const router = useRouter();
 
   useEffect(() => {
@@ -68,6 +70,11 @@ export default function Header() {
                 {user.displayName ? `(${user.displayName})` : ''}님 반갑습니다.
               </span>
               {user.email === adminEmail && (
+                <Link href='/admin' className={styles.managerLink}>
+                  권한 설정
+                </Link>
+              )}
+              {hasPermission && (
                 <Link href='/keywords' className={styles.managerLink}>
                   키워드 관리자
                 </Link>
