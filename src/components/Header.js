@@ -68,10 +68,13 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-      setUser(null);
-      setUnverifiedEmail(null);
-      router.refresh();
-    } catch (_) {}
+    } catch (_) {
+      // ignore sign-out errors
+    }
+    setUser(null);
+    setUnverifiedEmail(null);
+    router.push('/login');
+    router.refresh();
   };
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
