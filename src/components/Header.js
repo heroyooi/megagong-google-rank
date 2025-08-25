@@ -67,14 +67,16 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-    } catch (_) {
-      // ignore sign-out errors
+      if (!auth) throw new Error('auth not initialized');
+      await auth.signOut();
+      setUser(null);
+      setUnverifiedEmail(null);
+      router.replace('/login');
+      router.refresh();
+    } catch (err) {
+      console.error('Failed to sign out', err);
+      alert('로그아웃에 실패했습니다.');
     }
-    setUser(null);
-    setUnverifiedEmail(null);
-    router.push('/login');
-    router.refresh();
   };
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
