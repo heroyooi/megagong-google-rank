@@ -10,7 +10,6 @@ import {
   signInWithPopup,
   updateProfile,
   sendEmailVerification,
-  signOut,
 } from 'firebase/auth';
 import styles from './AuthForm.module.scss';
 
@@ -40,16 +39,13 @@ export default function AuthForm({ mode }) {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: nickname });
         await sendEmailVerification(cred.user);
-        await signOut(auth);
         setVerificationSent(true);
         intervalRef.current = setInterval(async () => {
           try {
-            const c = await signInWithEmailAndPassword(auth, email, password);
-            if (c.user.emailVerified) {
+            await auth.currentUser.reload();
+            if (auth.currentUser.emailVerified) {
               clearInterval(intervalRef.current);
               router.push('/');
-            } else {
-              await signOut(auth);
             }
           } catch (err) {
             setError(err.message);
@@ -74,9 +70,10 @@ export default function AuthForm({ mode }) {
   const handleResend = async () => {
     setError('');
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, password);
-      await sendEmailVerification(cred.user);
-      await signOut(auth);
+      if (auth.currentUser) {
+        await auth.currentUser.reload();
+        await sendEmailVerification(auth.currentUser);
+      }
     } catch (err) {
       setError(err.message);
     }
