@@ -68,6 +68,9 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await signOut(auth);
+      setUser(null);
+      setUnverifiedEmail(null);
+      router.refresh();
     } catch (_) {}
   };
 
