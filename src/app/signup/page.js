@@ -10,7 +10,7 @@ export default function SignupPage() {
   const router = useRouter();
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
-      if (user) router.replace('/');
+      if (user?.emailVerified) router.replace('/');
     });
     return () => unsub();
   }, [router]);
