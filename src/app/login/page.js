@@ -2,18 +2,16 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged } from 'firebase/auth';
-import { auth } from '@/firebaseClient';
 import AuthForm from '@/components/AuthForm';
+import { useAuth } from '@/context/AuthContext';
 
 export default function LoginPage() {
   const router = useRouter();
+  const { user } = useAuth();
+
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      if (user && user.emailVerified) router.replace('/');
-    });
-    return () => unsub();
-  }, [router]);
+    if (user) router.replace('/');
+  }, [user, router]);
 
   return <AuthForm mode='login' />;
 }

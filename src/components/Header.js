@@ -2,16 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { onIdTokenChanged, signOut } from 'firebase/auth';
-import { usePathname, useRouter } from 'next/navigation';
-import { auth } from '@/firebaseClient';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import styles from '@/styles/header.module.scss';
 
 export default function Header() {
   const [theme, setTheme] = useState('light');
-  const [user, setUser] = useState(null); // ✅ "검증된" 사용자만 들어감
-  const [unverifiedEmail, setUnverifiedEmail] = useState(null); // 인증 대기 안내용
-  const pathname = usePathname();
+  const { user, unverifiedEmail, logout } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -22,41 +19,7 @@ export default function Header() {
     const initial = stored || (prefersDark ? 'dark' : 'light');
     setTheme(initial);
     document.documentElement.setAttribute('data-theme', initial);
-
-    const isAuthPage = pathname === '/login' || pathname === '/signup';
-
-    const unsub = onIdTokenChanged(auth, async (u) => {
-      if (!u) {
-        setUser(null);
-        setUnverifiedEmail(null);
-        return;
-      }
-
-      try {
-        await u.reload();
-      } catch {}
-
-      if (u.emailVerified) {
-        setUser(u);
-        setUnverifiedEmail(null);
-
-        if (isAuthPage) {
-          router.replace('/');
-        }
-      } else {
-        setUser(null);
-        setUnverifiedEmail(u.email);
-
-        if (!isAuthPage) {
-          try {
-            await signOut(auth);
-          } catch {}
-        }
-      }
-    });
-
-    return () => unsub();
-  }, [pathname, router]);
+  }, []);
 
   const toggleTheme = () => {
     const next = theme === 'light' ? 'dark' : 'light';
@@ -67,10 +30,7 @@ export default function Header() {
 
   const handleLogout = async () => {
     try {
-      if (!auth) throw new Error('auth not initialized');
-      await auth.signOut();
-      setUser(null);
-      setUnverifiedEmail(null);
+      await logout();
       router.replace('/login');
       router.refresh();
     } catch (err) {

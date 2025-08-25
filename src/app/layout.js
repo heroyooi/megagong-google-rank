@@ -1,6 +1,7 @@
 import './globals.scss';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
+import { AuthProvider } from '@/context/AuthContext';
 import { Noto_Sans_KR } from 'next/font/google';
 
 const notoSansKr = Noto_Sans_KR({
@@ -21,9 +22,11 @@ export default function RootLayout({ children }) {
   return (
     <html lang='ko'>
       <body className={notoSansKr.className}>
-        <Header />
-        {children}
-        <Footer />
+        <AuthProvider>
+          <Header />
+          {children}
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
