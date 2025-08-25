@@ -8,11 +8,13 @@ import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   signInWithPopup,
+  updateProfile,
 } from 'firebase/auth';
 
 export default function AuthForm({ mode }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
 
@@ -23,7 +25,8 @@ export default function AuthForm({ mode }) {
       if (mode === 'login') {
         await signInWithEmailAndPassword(auth, email, password);
       } else {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(cred.user, { displayName: nickname });
       }
       router.push('/');
     } catch (err) {
@@ -59,6 +62,15 @@ export default function AuthForm({ mode }) {
           onChange={(e) => setPassword(e.target.value)}
           required
         />
+        {mode === 'signup' && (
+          <input
+            type='text'
+            placeholder='닉네임'
+            value={nickname}
+            onChange={(e) => setNickname(e.target.value)}
+            required
+          />
+        )}
         <button type='submit'>{mode === 'login' ? '로그인' : '회원가입'}</button>
       </form>
       <button onClick={handleGoogle} style={{ marginTop: '12px' }}>

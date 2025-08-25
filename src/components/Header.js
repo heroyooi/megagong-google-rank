@@ -2,10 +2,13 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
 
 export default function Header() {
   const [theme, setTheme] = useState('light');
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     const stored = localStorage.getItem('theme');
@@ -13,6 +16,8 @@ export default function Header() {
     const initial = stored || (prefersDark ? 'dark' : 'light');
     setTheme(initial);
     document.documentElement.setAttribute('data-theme', initial);
+    const unsub = onAuthStateChanged(auth, (u) => setUser(u));
+    return () => unsub();
   }, []);
 
   const toggleTheme = () => {
@@ -21,6 +26,8 @@ export default function Header() {
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
   };
+
+  const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
 
   return (
     <header>
@@ -33,12 +40,28 @@ export default function Header() {
           )}
         </Link>
         <div className={styles.controls}>
-          <Link href='/keywords' className={styles.managerLink}>
-            키워드 관리자
-          </Link>
-          <Link href='/login' className={styles.managerLink}>
-            로그인
-          </Link>
+          {user ? (
+            <>
+              {user.email === adminEmail && (
+                <Link href='/keywords' className={styles.managerLink}>
+                  키워드 관리자
+                </Link>
+              )}
+              <span className={styles.welcome}>
+                {user.email}
+                {user.displayName ? `(${user.displayName})` : ''}님 반갑습니다.
+              </span>
+            </>
+          ) : (
+            <>
+              <Link href='/login' className={styles.managerLink}>
+                로그인
+              </Link>
+              <Link href='/signup' className={styles.managerLink}>
+                회원가입
+              </Link>
+            </>
+          )}
           <button onClick={toggleTheme} aria-label='Toggle theme'>
             {theme === 'light' ? (
               <svg
