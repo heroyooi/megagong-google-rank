@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
@@ -55,7 +55,7 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       if (!auth) throw new Error('auth not initialized');
-      await auth.signOut();
+      await signOut(auth);
       setUser(null);
       setUnverifiedEmail(null);
       router.replace('/login');
