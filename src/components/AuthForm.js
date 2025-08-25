@@ -9,6 +9,8 @@ import {
   createUserWithEmailAndPassword,
   signInWithPopup,
   updateProfile,
+  sendEmailVerification,
+  signOut,
 } from 'firebase/auth';
 import styles from './AuthForm.module.scss';
 
@@ -17,19 +19,29 @@ export default function AuthForm({ mode }) {
   const [password, setPassword] = useState('');
   const [nickname, setNickname] = useState('');
   const [error, setError] = useState('');
+  const [message, setMessage] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setMessage('');
     try {
       if (mode === 'login') {
-        await signInWithEmailAndPassword(auth, email, password);
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        if (!cred.user.emailVerified) {
+          await signOut(auth);
+          setError('이메일 인증 후 로그인 가능합니다.');
+          return;
+        }
+        router.push('/');
       } else {
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(cred.user, { displayName: nickname });
+        await sendEmailVerification(cred.user);
+        await signOut(auth);
+        setMessage('인증 이메일이 전송되었습니다. 메일을 확인해주세요.');
       }
-      router.push('/');
     } catch (err) {
       setError(err.message);
     }
@@ -83,6 +95,7 @@ export default function AuthForm({ mode }) {
         Google로 {mode === 'login' ? '로그인' : '회원가입'}
       </button>
       {error && <p className={styles.error}>{error}</p>}
+      {message && <p className={styles.message}>{message}</p>}
       {mode === 'login' ? (
         <p className={styles.switch}>
           계정이 없나요? <Link href='/signup'>회원가입</Link>
