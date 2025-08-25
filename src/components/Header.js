@@ -36,6 +36,9 @@ export default function Header() {
           <Link href='/keywords' className={styles.managerLink}>
             키워드 관리자
           </Link>
+          <Link href='/login' className={styles.managerLink}>
+            로그인
+          </Link>
           <button onClick={toggleTheme} aria-label='Toggle theme'>
             {theme === 'light' ? (
               <svg
