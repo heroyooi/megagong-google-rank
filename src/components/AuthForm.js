@@ -10,6 +10,7 @@ import {
   signInWithPopup,
   updateProfile,
 } from 'firebase/auth';
+import styles from './AuthForm.module.scss';
 
 export default function AuthForm({ mode }) {
   const [email, setEmail] = useState('');
@@ -45,10 +46,11 @@ export default function AuthForm({ mode }) {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-      <h1>{mode === 'login' ? '로그인' : '회원가입'}</h1>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div className={styles.container}>
+      <h1 className={styles.title}>{mode === 'login' ? '로그인' : '회원가입'}</h1>
+      <form onSubmit={handleSubmit} className={styles.form}>
         <input
+          className={styles.input}
           type='email'
           placeholder='이메일'
           value={email}
@@ -56,6 +58,7 @@ export default function AuthForm({ mode }) {
           required
         />
         <input
+          className={styles.input}
           type='password'
           placeholder='비밀번호'
           value={password}
@@ -64,6 +67,7 @@ export default function AuthForm({ mode }) {
         />
         {mode === 'signup' && (
           <input
+            className={styles.input}
             type='text'
             placeholder='닉네임'
             value={nickname}
@@ -71,18 +75,20 @@ export default function AuthForm({ mode }) {
             required
           />
         )}
-        <button type='submit'>{mode === 'login' ? '로그인' : '회원가입'}</button>
+        <button type='submit' className={styles.submitButton}>
+          {mode === 'login' ? '로그인' : '회원가입'}
+        </button>
       </form>
-      <button onClick={handleGoogle} style={{ marginTop: '12px' }}>
+      <button onClick={handleGoogle} className={styles.googleButton}>
         Google로 {mode === 'login' ? '로그인' : '회원가입'}
       </button>
-      {error && <p style={{ color: 'red', marginTop: '8px' }}>{error}</p>}
+      {error && <p className={styles.error}>{error}</p>}
       {mode === 'login' ? (
-        <p style={{ marginTop: '8px' }}>
+        <p className={styles.switch}>
           계정이 없나요? <Link href='/signup'>회원가입</Link>
         </p>
       ) : (
-        <p style={{ marginTop: '8px' }}>
+        <p className={styles.switch}>
           이미 계정이 있나요? <Link href='/login'>로그인</Link>
         </p>
       )}

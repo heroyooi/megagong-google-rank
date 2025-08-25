@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { auth } from '@/firebaseClient';
 import styles from '@/styles/header.module.scss';
 
@@ -25,6 +25,10 @@ export default function Header() {
     setTheme(next);
     document.documentElement.setAttribute('data-theme', next);
     localStorage.setItem('theme', next);
+  };
+
+  const handleLogout = () => {
+    signOut(auth);
   };
 
   const adminEmail = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
@@ -51,6 +55,9 @@ export default function Header() {
                 {user.email}
                 {user.displayName ? `(${user.displayName})` : ''}님 반갑습니다.
               </span>
+              <button onClick={handleLogout} className={styles.logout}>
+                로그아웃
+              </button>
             </>
           ) : (
             <>
